@@ -1,5 +1,4 @@
 defmodule Karn.Ai do
-
   @server Karn.Ai.Server
   @moduledoc """
   A client interface for interacting with the main AI service, managed by
@@ -27,9 +26,13 @@ defmodule Karn.Ai do
       Karn.Ai.usage()
 
       # switch model
-      Karn.Ai.switch("google:gemini-2.0")
+      Karn.Ai.switch_model("google:gemini-2.0")
+
+      # reset model
+      Karn.Ai.reset_model
   """
- 
+  alias Karn.Ai.Models
+
   @doc """
   Sends a natural language query (`cmd`) to the AI server.
 
@@ -44,10 +47,60 @@ defmodule Karn.Ai do
   Current (and default implementation) is IO as this is ment to be used through IEX
   * `:done`
   """
-  def q(cmd) do
-    GenServer.call(@server,{:query,cmd})
+  def start() do
+    start([])
   end
 
+  @doc """
+  Starts the AI server.
+
+  ## Parameters
+  * `opts`: A keyword list of options to pass to the server. See `Karn.Ai.Server.start_link/1` for more information.
+
+  ## Returns
+  * `{:ok, pid}` if the server was started successfully.
+  * `{:error, reason}` otherwise.
+  """
+  def start(opts) when is_list(opts) do
+    Karn.Ai.Server.start_link(Keyword.put(opts, :name, @server))
+  end
+
+  @doc """
+  Switches the model used by the AI server.
+
+  ## Parameters
+  * `model`: The name of the model to switch to.
+
+  ## Returns
+  * `:ok` if the model was switched successfully.
+  * `{:error, :not_found}` if the model is not available.
+  """
+  def switch_model(model) do
+    if Karn.Ai.Models.valid?(model) do
+      GenServer.call(@server, {:switch_model, model})
+    else
+      Karn.Output.IO.send_response(
+        "model has to be in format provider:model example google:gemini-2.5"
+      )
+
+      {:error, :not_found}
+    end
+  end
+
+  @doc """
+  Switches the model used by the AI server.
+
+  ## Returns
+  * `:ok` if the model was switched successfully.
+  * `{:error, :not_found}` if the model is not available.
+  """
+  def reset_model() do
+    GenServer.call(@server, {:switch_model, Models.default()})
+  end
+
+  def q(cmd) do
+    GenServer.call(@server, {:query, cmd})
+  end
 
   @doc """
   Requests AI to explain any specific module.
@@ -66,14 +119,14 @@ defmodule Karn.Ai do
   * `:done`
   """
 
-  def e(mod),do: e(mod,[],nil)
+  def e(mod), do: e(mod, [], nil)
 
-  def e(mod,q) when is_bitstring(q),do: e(mod,[],q)
+  def e(mod, q) when is_bitstring(q), do: e(mod, [], q)
 
-  def e(mod,refs) when is_list(refs),do: e(mod,refs,nil)
- 
-  def e(mod,refs,q) do
-    GenServer.call(@server,{:explain,mod,refs,q})
+  def e(mod, refs) when is_list(refs), do: e(mod, refs, nil)
+
+  def e(mod, refs, q) do
+    GenServer.call(@server, {:explain, mod, refs, q})
   end
 
   @doc """
@@ -84,9 +137,9 @@ defmodule Karn.Ai do
   Current (and default implementation) is IO as this is ment to be used through IEX
   * `:done`
   """
- 
+
   def usage() do
-    GenServer.call(@server,:usage)
+    GenServer.call(@server, :usage)
   end
 
   @doc """
@@ -96,10 +149,10 @@ defmodule Karn.Ai do
   The response from the AI server (content and format depend on the server implementation).
   Current (and default implementation) is IO as this is ment to be used through IEX
   """
- 
+
   def stop() do
     usage()
-    GenServer.stop(@server,"User ended session")
+    GenServer.stop(@server, "User ended session")
   end
 
   @doc """
@@ -110,11 +163,10 @@ defmodule Karn.Ai do
   Current (and default implementation) is IO as this is ment to be used through IEX
   * `:done`
   """
- 
-  def view_context() do
-    GenServer.call(@server,:view_context)
-  end
 
+  def view_context() do
+    GenServer.call(@server, :view_context)
+  end
 
   @doc """
   Reset context
@@ -127,10 +179,8 @@ defmodule Karn.Ai do
   Current (and default implementation) is IO as this is ment to be used through IEX
   * `:done`
   """
- 
-  def reset_context(sys\\nil) do
-    GenServer.call(@server,{:reset_context,sys})
-  end
 
- 
+  def reset_context(sys \\ nil) do
+    GenServer.call(@server, {:reset_context, sys})
+  end
 end

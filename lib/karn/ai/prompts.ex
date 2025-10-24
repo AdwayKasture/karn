@@ -1,5 +1,4 @@
 defmodule Karn.Ai.Prompts do
-
   @moduledoc """
   All the prompt templates to used by the LLM
   """
@@ -15,10 +14,12 @@ defmodule Karn.Ai.Prompts do
     """
   end
 
-  def explain_module(code,mods,q) do
-    part = if q,
-      do: "Understand the above code and explain #{q}",
-      else: "Understand the above code and explain it."
+  def explain_module(code, mods, q) do
+    part =
+      if q,
+        do: "Understand the above code and explain #{q}",
+        else: "Understand the above code and explain it."
+
     """
     #{code}
     #{part}
@@ -29,5 +30,4 @@ defmodule Karn.Ai.Prompts do
     #{mods}
     """
   end
-  
 end

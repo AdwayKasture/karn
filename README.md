@@ -30,11 +30,12 @@ mix deps.get
 
 ## Todo List
 
-- [ ] Multi-model support
+- [x] Multi-model support
 - [ ] Tests
-- [ ] Error handling
-- [ ] Timeouts
-
+- [x] Error handling
+- [x] Timeouts
+- [ ] Igniter Installation
+- [ ] context cachinig
 
 ## Setup and Usage
 

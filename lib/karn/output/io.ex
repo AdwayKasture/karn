@@ -8,12 +8,17 @@ defmodule Karn.Output.IO do
   end
 
   @impl Output
+  def send_error(message) do
+    IO.puts(message)
+  end
+
+  @impl Output
   def send_blocks(messages) do
-    Enum.map(messages,fn %{role: role,text: text} -> print_block(role,text) end)
+    Enum.map(messages, fn %{role: role, text: text} -> print_block(role, text) end)
     :ok
   end
 
-  @impl Output 
+  @impl Output
   def send_usage(usage) do
     print_usage_per_model(usage)
   end
@@ -33,16 +38,16 @@ defmodule Karn.Output.IO do
       IO.puts(~s|  Input Cost:   $#{format_num(stats.input_cost)}|)
       IO.puts(~s|  Output Cost:  $#{format_num(stats.output_cost)}|)
     end)
+
     IO.puts("======================================================")
     :ok
   end
 
-  defp print_block(role,text) do
+  defp print_block(role, text) do
     IO.puts("#{role}:")
     IO.puts(text)
     IO.puts("------------------------------------------------------")
   end
 
-  defp format_num(d),do: :erlang.float_to_binary(d,[decimals: 8])
-  
+  defp format_num(d), do: :erlang.float_to_binary(d, decimals: 8)
 end
