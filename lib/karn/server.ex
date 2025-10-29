@@ -1,5 +1,7 @@
-defmodule Karn.Ai.Server do
-  alias Karn.Ai.{Introspect, Prompts, State, Models}
+defmodule Karn.Server do
+  alias Karn.LLMAdapter
+  alias Karn.AI.{Introspect, Prompts, Models}
+  alias Karn.State
   alias Karn.Output
   alias ReqLLM.{Response, Context}
   use GenServer
@@ -11,9 +13,8 @@ defmodule Karn.Ai.Server do
 
     init = %State{
       context: new(),
-      turn: :user,
       model: model,
-      usage: %{model => %{input_tokens: 0, output_tokens: 0, total_cost: 0.0}}
+      usage: %{model => %{input_tokens: 0,output_tokens: 0,cached_tokens: 0,reasoning_tokens: 0,total_tokens: 0,total_cost: 0.0,input_cost: 0.0,output_cost: 0.0}}
     }
 
     GenServer.start_link(__MODULE__, init, opts)
@@ -35,12 +36,12 @@ defmodule Karn.Ai.Server do
   def handle_call(
         {:query, cmd},
         _from,
-        %State{turn: :user, context: ctx, usage: usg, model: model} = state
+        %State{context: ctx, usage: usg, model: model} = state
       ) do
     ctx = Context.append(ctx, Context.user(cmd))
 
     {usage, ctx} =
-      case ReqLLM.generate_text(model, Context.to_list(ctx)) do
+      case LLMAdapter.generate_text(model, Context.to_list(ctx)) do
         {:error, resp} ->
           handle_error(resp)
           {usg, ctx}
@@ -50,7 +51,7 @@ defmodule Karn.Ai.Server do
       end
 
     usage = Map.put(usg, model, usage)
-    {:reply, :done, %State{turn: :user, model: model, context: ctx, usage: usage}}
+    {:reply, :done, %State{model: model, context: ctx, usage: usage}}
   end
 
   # TODO make modules as separate messages so it can be cached
@@ -58,7 +59,7 @@ defmodule Karn.Ai.Server do
   def handle_call(
         {:explain, mod, refs, q},
         _from,
-        state = %State{turn: :user, context: ctx, usage: usg, model: model}
+        state = %State{context: ctx, usage: usg, model: model}
       ) do
     {:ok, module_file} = Introspect.module(mod)
 
@@ -74,7 +75,7 @@ defmodule Karn.Ai.Server do
     ctx = Context.append(ctx, Context.user(Prompts.explain_module(module_file, ref_files, q)))
 
     {usage, ctx} =
-      case ReqLLM.generate_text(model, Context.to_list(ctx)) do
+      case LLMAdapter.generate_text(model, Context.to_list(ctx)) do
         {:error, resp} ->
           handle_error(resp)
           {usg, ctx}
@@ -84,12 +85,18 @@ defmodule Karn.Ai.Server do
       end
 
     usage = Map.put(usg, model, usage)
-    {:reply, :done, %State{turn: :user, context: ctx, model: model, usage: usage}}
+    {:reply, :done, %State{context: ctx, model: model, usage: usage}}
   end
 
   @impl GenServer
   def handle_call(:usage, _from, %State{usage: usg} = ctx) do
     Output.IO.send_usage(usg)
+    {:reply, :done, ctx}
+  end
+
+  @impl GenServer
+  def handle_call(:view_state, _from,ctx) do
+    Output.IO.send_state(ctx)
     {:reply, :done, ctx}
   end
 
@@ -123,7 +130,13 @@ defmodule Karn.Ai.Server do
 
   @impl GenServer
   def handle_call({:switch_model, model}, _from, state) do
-    state = Map.put(state, :model, model)
+    state = if Models.valid(model) == :ok do
+      Map.put(state, :model, model)
+    else
+      {:error,msg} = Models.valid(model)
+      Output.IO.send_error(msg)
+      state
+    end
     {:reply, :ok, state}
   end
 

@@ -36,6 +36,8 @@ mix deps.get
 - [x] Timeouts
 - [ ] Igniter Installation
 - [ ] context cachinig
+- [ ] docs
+- [ ] cleanup
 
 ## Setup and Usage
 
@@ -46,7 +48,7 @@ Karn is designed to be used interactively within an `IEx` session.
 Start your project's `IEx` session:
 
 ```shell
-iex -S mix phx.Server
+iex -S mix phx.server
 #
 iex -S mix run
 ```

@@ -1,4 +1,4 @@
-defmodule Karn.Ai.Introspect do
+defmodule Karn.AI.Introspect do
   @moduledoc """
   Provides functions for introspection of Elixir modules, primarily focusing on
   attempting to retrieve the source file content for a given module.

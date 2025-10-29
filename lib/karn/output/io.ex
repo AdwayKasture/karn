@@ -1,4 +1,6 @@
 defmodule Karn.Output.IO do
+  alias ReqLLM.Context
+  alias Karn.State
   alias Karn.Output
   @behaviour Output
 
@@ -21,6 +23,21 @@ defmodule Karn.Output.IO do
   @impl Output
   def send_usage(usage) do
     print_usage_per_model(usage)
+  end
+
+  @impl Output
+  def send_state(state) when is_struct(state,State) do
+    blocks = state.context
+    |> Context.to_list()
+    |> Enum.map(fn m ->
+        [content] = m.content
+        %{role: m.role, text: content.text}
+      end)
+
+    send_blocks(blocks)
+    IO.puts("model: #{state.model}")
+    print_usage_per_model(state)
+    :ok
   end
 
   defp print_usage_per_model(usage_map) when is_map(usage_map) do

@@ -10,4 +10,6 @@ defmodule Karn.Output do
   @callback send_blocks(messages :: list(map())) :: :ok | {:error, String.t()}
 
   @callback send_usage(data :: map()) :: :ok | {:error, String.t()}
+
+  @callback send_state(data :: struct()) :: :ok|{:error,String.t()}
 end
