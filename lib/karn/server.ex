@@ -38,9 +38,9 @@ defmodule Karn.Server do
   end
 
   @impl GenServer
-  def handle_info(:start, ctx) do
+  def handle_info(:start, state) do
     Output.send_response("Ask your elixir query")
-    {:noreply, ctx}
+    {:noreply, state}
   end
 
   @impl GenServer
@@ -49,7 +49,7 @@ defmodule Karn.Server do
         _from,
         %State{context: ctx, usage: usg, model: model} = state
       ) do
-    ctx = Context.append(ctx, Context.user(cmd))
+    req = Context.user(cmd)
 
     {usage, ctx} =
       case LLMAdapter.generate_text(model, Context.to_list(ctx)) do
@@ -58,7 +58,7 @@ defmodule Karn.Server do
           {usg, ctx}
 
         {:ok, resp} ->
-          update_context(resp, state)
+          update_context(req, resp, state)
       end
 
     usage = Map.put(usg, model, usage)
@@ -83,7 +83,7 @@ defmodule Karn.Server do
       end)
       |> Enum.reduce("", fn l, r -> l <> "\n" <> r end)
 
-    ctx = Context.append(ctx, Context.user(Prompts.explain_module(module_file, ref_files, q)))
+    req = Context.user(Prompts.explain_module(module_file, ref_files, q))
 
     {usage, ctx} =
       case LLMAdapter.generate_text(model, Context.to_list(ctx)) do
@@ -92,7 +92,7 @@ defmodule Karn.Server do
           {usg, ctx}
 
         {:ok, resp} ->
-          update_context(resp, state)
+          update_context(req, resp, state)
       end
 
     usage = Map.put(usg, model, usage)
@@ -170,10 +170,11 @@ defmodule Karn.Server do
     end
   end
 
-  defp update_context(resp, state) when is_struct(state, State) do
+  defp update_context(req, resp, state) when is_struct(state, State) do
     usage = Map.merge(resp.usage, state.usage[state.model], fn _k, l, r -> l + r end)
     text = Response.text(resp)
-    ctx = Context.append(state.context, Context.assistant(text))
+    ctx = Context.append(state.context, req)
+    ctx = Context.append(ctx, Context.assistant(text))
     Output.send_response(text)
     {usage, ctx}
   end

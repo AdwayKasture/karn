@@ -39,6 +39,13 @@ mix deps.get
 - [ ] docs
 - [ ] cleanup
 
+
+# TODO now
+- [ ] server tests for failed api calls
+- [ ] server tests for reset context with new query
+- [ ] introspection
+- [ ] apis in main 
+
 ## Setup and Usage
 
 Karn is designed to be used interactively within an `IEx` session.
