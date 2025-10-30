@@ -21,7 +21,8 @@ defmodule Karn.AI.Models do
   defp generate_error(model) do
     with [provider, m] <- String.split(model, ":"),
          {:ok, prov_id} <- get_provider(provider) do
-      {:ok,listed_models} = Registry.list_models(prov_id)
+      {:ok, listed_models} = Registry.list_models(prov_id)
+
       models =
         listed_models
         |> Enum.map(fn m -> to_string(m) end)
@@ -48,6 +49,4 @@ defmodule Karn.AI.Models do
       _ -> {:error, "No such provider exists"}
     end
   end
-
-
 end

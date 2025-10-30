@@ -26,10 +26,11 @@ defmodule Karn.Output.IO do
   end
 
   @impl Output
-  def send_state(state) when is_struct(state,State) do
-    blocks = state.context
-    |> Context.to_list()
-    |> Enum.map(fn m ->
+  def send_state(state) when is_struct(state, State) do
+    blocks =
+      state.context
+      |> Context.to_list()
+      |> Enum.map(fn m ->
         [content] = m.content
         %{role: m.role, text: content.text}
       end)

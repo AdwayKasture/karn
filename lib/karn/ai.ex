@@ -7,12 +7,14 @@ defmodule Karn.AI do
   end
 
   def start(opts) when is_list(opts) do
-    case Keyword.get(opts,:model,:default) do
-      :default -> Karn.Server.start_link(Keyword.put(opts, :name, @server))
-      model -> 
+    case Keyword.get(opts, :model, :default) do
+      :default ->
+        Karn.Server.start_link(Keyword.put(opts, :name, @server))
+
+      model ->
         case Models.valid(model) do
           :ok -> Karn.Server.start_link(Keyword.put(opts, :name, @server))
-          {:error, m} -> Karn.Output.IO.send_error(m)
+          {:error, m} -> Karn.Output.send_error(m)
         end
     end
   end
@@ -20,7 +22,7 @@ defmodule Karn.AI do
   def switch_model(model) do
     case Models.valid(model) do
       :ok -> GenServer.call(@server, {:switch_model, model})
-      {:error, m} -> Karn.Output.IO.send_error(m)
+      {:error, m} -> Karn.Output.send_error(m)
     end
   end
 
@@ -37,7 +39,7 @@ defmodule Karn.AI do
   def e(mod, q) when is_bitstring(q), do: e(mod, [], q)
 
   def e(mod, refs) when is_list(refs), do: e(mod, refs, nil)
-  
+
   def e(mod, ref) when is_atom(ref), do: e(mod, [ref], nil)
 
   def e(mod, refs, q) do
@@ -50,7 +52,7 @@ defmodule Karn.AI do
 
   def stop() do
     usage()
-    GenServer.stop(@server,:normal)
+    GenServer.stop(@server, :normal)
   end
 
   def view_context() do
@@ -58,7 +60,7 @@ defmodule Karn.AI do
   end
 
   def view_state() do
-    GenServer.call(@server,:view_state)
+    GenServer.call(@server, :view_state)
   end
 
   def reset_context(sys \\ nil) do

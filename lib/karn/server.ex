@@ -14,7 +14,18 @@ defmodule Karn.Server do
     init = %State{
       context: new(),
       model: model,
-      usage: %{model => %{input_tokens: 0,output_tokens: 0,cached_tokens: 0,reasoning_tokens: 0,total_tokens: 0,total_cost: 0.0,input_cost: 0.0,output_cost: 0.0}}
+      usage: %{
+        model => %{
+          input_tokens: 0,
+          output_tokens: 0,
+          cached_tokens: 0,
+          reasoning_tokens: 0,
+          total_tokens: 0,
+          total_cost: 0.0,
+          input_cost: 0.0,
+          output_cost: 0.0
+        }
+      }
     }
 
     GenServer.start_link(__MODULE__, init, opts)
@@ -28,7 +39,7 @@ defmodule Karn.Server do
 
   @impl GenServer
   def handle_info(:start, ctx) do
-    Output.IO.send_response("Ask your elixir query")
+    Output.send_response("Ask your elixir query")
     {:noreply, ctx}
   end
 
@@ -90,13 +101,13 @@ defmodule Karn.Server do
 
   @impl GenServer
   def handle_call(:usage, _from, %State{usage: usg} = ctx) do
-    Output.IO.send_usage(usg)
+    Output.send_usage(usg)
     {:reply, :done, ctx}
   end
 
   @impl GenServer
-  def handle_call(:view_state, _from,ctx) do
-    Output.IO.send_state(ctx)
+  def handle_call(:view_state, _from, ctx) do
+    Output.send_state(ctx)
     {:reply, :done, ctx}
   end
 
@@ -109,7 +120,7 @@ defmodule Karn.Server do
         %{role: m.role, text: content.text}
       end)
 
-    Output.IO.send_blocks(messages)
+    Output.send_blocks(messages)
     {:reply, :done, state}
   end
 
@@ -130,13 +141,15 @@ defmodule Karn.Server do
 
   @impl GenServer
   def handle_call({:switch_model, model}, _from, state) do
-    state = if Models.valid(model) == :ok do
-      Map.put(state, :model, model)
-    else
-      {:error,msg} = Models.valid(model)
-      Output.IO.send_error(msg)
-      state
-    end
+    state =
+      if Models.valid(model) == :ok do
+        Map.put(state, :model, model)
+      else
+        {:error, msg} = Models.valid(model)
+        Output.send_error(msg)
+        state
+      end
+
     {:reply, :ok, state}
   end
 
@@ -147,13 +160,13 @@ defmodule Karn.Server do
   defp handle_error(resp) do
     case resp do
       %ReqLLM.Error.Validation.Error{reason: r} ->
-        Output.IO.send_error(r)
+        Output.send_error(r)
 
       %ReqLLM.Error.API.Request{reason: reason, status: status} ->
-        Output.IO.send_error("Failed to make query due to #{reason}, with status code #{status}")
+        Output.send_error("Failed to make query due to #{reason}, with status code #{status}")
 
       unknown ->
-        Output.IO.send_error("Failed due to #{unknown}")
+        Output.send_error("Failed due to #{unknown}")
     end
   end
 
@@ -161,7 +174,7 @@ defmodule Karn.Server do
     usage = Map.merge(resp.usage, state.usage[state.model], fn _k, l, r -> l + r end)
     text = Response.text(resp)
     ctx = Context.append(state.context, Context.assistant(text))
-    Output.IO.send_response(text)
+    Output.send_response(text)
     {usage, ctx}
   end
 end
