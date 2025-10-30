@@ -31,20 +31,13 @@ mix deps.get
 ## Todo List
 
 - [x] Multi-model support
-- [ ] Tests
+- [x] Tests
 - [x] Error handling
 - [x] Timeouts
 - [ ] Igniter Installation
 - [ ] context cachinig
 - [ ] docs
 - [ ] cleanup
-
-
-# TODO now
-- [ ] server tests for failed api calls
-- [ ] server tests for reset context with new query
-- [ ] introspection
-- [ ] apis in main 
 
 ## Setup and Usage
 

@@ -4,6 +4,7 @@ defmodule Karn.ExplainTest do
   alias Karn.Server
   alias Karn.LLMAdapterMock
   import Karn.Test.Fixtures
+  @moduletag :ak
 
   setup :set_mox_from_context
   setup :verify_on_exit!
@@ -13,7 +14,6 @@ defmodule Karn.ExplainTest do
     :ok
   end
 
-  # TODO handle match errors
   describe "Explain Handling" do
     setup do
       {:ok, _pid} = start_supervised({Server, [name: Server]})
@@ -43,6 +43,11 @@ defmodule Karn.ExplainTest do
 
     test "e/2 explains a module with references" do
       assert Karn.e(Karn.AI, [Karn.Server]) == :done
+      assert_receive {:response, "Explanation complete."}
+    end
+
+    test "e/2 explains a module with multiple references" do
+      assert Karn.e(Karn.AI, [Karn.Server, Karn.AI.Introspect]) == :done
       assert_receive {:response, "Explanation complete."}
     end
 

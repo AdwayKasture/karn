@@ -52,7 +52,7 @@ defmodule Karn.Server do
     req = Context.user(cmd)
 
     {usage, ctx} =
-      case LLMAdapter.generate_text(model, Context.to_list(ctx)) do
+      case LLMAdapter.generate_text(model, Context.to_list(Context.append(ctx,req))) do
         {:error, resp} ->
           handle_error(resp)
           {usg, ctx}
@@ -65,12 +65,14 @@ defmodule Karn.Server do
     {:reply, :done, %State{model: model, context: ctx, usage: usage}}
   end
 
+  # TODO needs proper refactor
   @impl GenServer
   def handle_call(
         {:explain, mod, refs, q},
         _from,
         state = %State{context: ctx, usage: usg, model: model}
       ) do
+
     case Introspect.module(mod) do
       {:ok, module_file} ->
         ref_files =
@@ -85,7 +87,7 @@ defmodule Karn.Server do
         req = Context.user(Prompts.explain_module(module_file, ref_files, q))
 
         {usage, ctx} =
-          case LLMAdapter.generate_text(model, Context.to_list(ctx)) do
+          case LLMAdapter.generate_text(model, Context.to_list(Context.append(ctx,req))) do
             {:error, resp} ->
               handle_error(resp)
               {usg, ctx}
@@ -145,30 +147,23 @@ defmodule Karn.Server do
 
   @impl GenServer
   def handle_call({:switch_model, model}, _from, state) do
-    state =
-      if Models.valid(model) == :ok do
-        new_usage =
-          Map.put_new(state.usage, model, %{
-            input_tokens: 0,
-            output_tokens: 0,
-            cached_tokens: 0,
-            reasoning_tokens: 0,
-            total_tokens: 0,
-            total_cost: 0.0,
-            input_cost: 0.0,
-            output_cost: 0.0
-          })
+    new_usage =
+      Map.put_new(state.usage, model, %{
+        input_tokens: 0,
+        output_tokens: 0,
+        cached_tokens: 0,
+        reasoning_tokens: 0,
+        total_tokens: 0,
+        total_cost: 0.0,
+        input_cost: 0.0,
+        output_cost: 0.0
+      })
 
-        state
-        |> Map.put(:model, model)
-        |> Map.put(:usage, new_usage)
-      else
-        {:error, msg} = Models.valid(model)
-        Output.send_error(msg)
-        state
-      end
+    new_state  = state
+    |> Map.put(:model, model)
+    |> Map.put(:usage, new_usage)
 
-    {:reply, :ok, state}
+    {:reply, :ok, new_state}
   end
 
   defp new() do
@@ -188,6 +183,7 @@ defmodule Karn.Server do
     end
   end
 
+  # TODO extract common handling for query and explain
   defp update_context(req, resp, state) when is_struct(state, State) do
     usage = Map.merge(resp.usage, state.usage[state.model], fn _k, l, r -> l + r end)
     text = Response.text(resp)
