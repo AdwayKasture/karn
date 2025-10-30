@@ -1,7 +1,5 @@
 defmodule Karn.AI.Prompts do
-  @moduledoc """
-  All the prompt templates to used by the LLM
-  """
+  @doc false
 
   def base() do
     """
