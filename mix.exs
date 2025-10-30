@@ -9,7 +9,7 @@ defmodule Karn.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
-      test_coverage: [ignore_modules: [Karn.AI.Prompts]]
+      test_coverage: [ignore_modules: [Karn.AI.Prompts,Karn.Test.Fixtures]]
     ]
   end
 

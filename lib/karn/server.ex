@@ -65,38 +65,42 @@ defmodule Karn.Server do
     {:reply, :done, %State{model: model, context: ctx, usage: usage}}
   end
 
-  # TODO make modules as separate messages so it can be cached
   @impl GenServer
   def handle_call(
         {:explain, mod, refs, q},
         _from,
         state = %State{context: ctx, usage: usg, model: model}
       ) do
-    {:ok, module_file} = Introspect.module(mod)
+    case Introspect.module(mod) do
+      {:ok, module_file} ->
+        ref_files =
+          refs
+          |> Enum.map(fn ref -> Introspect.module(ref) end)
+          |> Enum.flat_map(fn
+            {:ok, d} -> [d]
+            {:error, _r} -> []
+          end)
+          |> Enum.reduce("", fn l, r -> l <> "\n" <> r end)
 
-    ref_files =
-      refs
-      |> Enum.map(fn ref -> Introspect.module(ref) end)
-      |> Enum.flat_map(fn
-        {:ok, d} -> [d]
-        {:error, _r} -> []
-      end)
-      |> Enum.reduce("", fn l, r -> l <> "\n" <> r end)
+        req = Context.user(Prompts.explain_module(module_file, ref_files, q))
 
-    req = Context.user(Prompts.explain_module(module_file, ref_files, q))
+        {usage, ctx} =
+          case LLMAdapter.generate_text(model, Context.to_list(ctx)) do
+            {:error, resp} ->
+              handle_error(resp)
+              {usg, ctx}
 
-    {usage, ctx} =
-      case LLMAdapter.generate_text(model, Context.to_list(ctx)) do
-        {:error, resp} ->
-          handle_error(resp)
-          {usg, ctx}
+            {:ok, resp} ->
+              update_context(req, resp, state)
+          end
 
-        {:ok, resp} ->
-          update_context(req, resp, state)
-      end
+        usage = Map.put(usg, model, usage)
+        {:reply, :done, %State{context: ctx, model: model, usage: usage}}
 
-    usage = Map.put(usg, model, usage)
-    {:reply, :done, %State{context: ctx, model: model, usage: usage}}
+      {:error, reason} ->
+        Output.send_error("Failed to explain module: #{reason}")
+        {:reply, :done, state}
+    end
   end
 
   @impl GenServer
@@ -143,7 +147,21 @@ defmodule Karn.Server do
   def handle_call({:switch_model, model}, _from, state) do
     state =
       if Models.valid(model) == :ok do
-        Map.put(state, :model, model)
+        new_usage =
+          Map.put_new(state.usage, model, %{
+            input_tokens: 0,
+            output_tokens: 0,
+            cached_tokens: 0,
+            reasoning_tokens: 0,
+            total_tokens: 0,
+            total_cost: 0.0,
+            input_cost: 0.0,
+            output_cost: 0.0
+          })
+
+        state
+        |> Map.put(:model, model)
+        |> Map.put(:usage, new_usage)
       else
         {:error, msg} = Models.valid(model)
         Output.send_error(msg)

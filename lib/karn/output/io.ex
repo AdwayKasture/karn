@@ -37,7 +37,7 @@ defmodule Karn.Output.IO do
 
     send_blocks(blocks)
     IO.puts("model: #{state.model}")
-    print_usage_per_model(state)
+    print_usage_per_model(state.usage)
     :ok
   end
 
