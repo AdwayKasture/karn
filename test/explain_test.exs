@@ -55,7 +55,7 @@ defmodule Karn.ExplainTest do
       Karn.view_context()
       assert_receive {:blocks, messages}
       # system,module AI,module Server,module Introspect,query,response
-      assert length(messages) == 5
+      assert length(messages) == 6
     end
 
     test "e/3 explains a module with references and a query" do

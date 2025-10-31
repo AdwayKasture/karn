@@ -40,6 +40,7 @@ mix deps.get
 - [ ] cleanup
 - [ ] default models for common providers
 - [ ] upgrade to stable version of reqllm
+- [ ] integration tests
 
 
 ## Setup and Usage
@@ -79,7 +80,7 @@ You can configure your key in one of two ways:
 Start the `Karn.Ai.Server` process:
 
 ```elixir
-Karn.Ai.Server.start_link()
+Karn.start
 ```
 
 You should see the message: `"Ask your elixir query"`
@@ -89,8 +90,8 @@ You should see the message: `"Ask your elixir query"`
 For a more human-friendly experience, import the `Karn.Ai` functions into your `IEx` shell. This allows you to call them directly.
 
 ```elixir
-iex> import Karn.Ai
-Karn.Ai
+iex> import Karn
+Karn
 ```
 
 Now you can interact with the AI.

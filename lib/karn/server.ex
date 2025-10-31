@@ -82,7 +82,7 @@ defmodule Karn.Server do
           Context.user(content, %{ref: ref_name})
         end)
 
-      query_msg = if q == nil, do: Context.user("explain #{mod}"), else: Context.user(q)
+      query_msg = Context.user(Prompts.explain_module(q))
 
       all_new_file_messages = [main_msg | ref_msgs]
 

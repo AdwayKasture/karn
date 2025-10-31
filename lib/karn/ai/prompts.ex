@@ -12,20 +12,16 @@ defmodule Karn.AI.Prompts do
     """
   end
 
-  def explain_module(code, mods, q) do
-    part =
-      if q,
+  def explain_module(q) do
+    part = if q !== nil,
         do: "Understand the above code and explain #{q}",
         else: "Understand the above code and explain it."
 
     """
-    #{code}
     #{part}
-    If its a very large module share some key functions you can use 
+    If its a very large module share some key functions  and their working
     If you need any more information or have questions you can ask the user.
     You can also request user for specific modules.
-    Some other relevant modules are
-    #{mods}
     """
   end
 end
