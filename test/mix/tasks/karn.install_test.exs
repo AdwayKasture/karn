@@ -1,7 +1,6 @@
 defmodule Mix.Tasks.Karn.InstallTest do
   use ExUnit.Case, async: true
   import Igniter.Test
-  @moduletag :tasks
 
   @model_switches [
     {"--google", "google:gemini-2.0-flash"},
@@ -42,7 +41,6 @@ defmodule Mix.Tasks.Karn.InstallTest do
     )
   end
 
-  @tag :aa
   test "custom model selection" do
     for {flag, model} <- @model_switches do
       [app_name: :karn]

@@ -1,4 +1,5 @@
 defmodule Karn.Server do
+  alias ReqLLM.Providers.Anthropic.Context
   alias Karn.LLMAdapter
   alias Karn.AI.{Introspect, Prompts, Models}
   alias Karn.State
@@ -65,39 +66,43 @@ defmodule Karn.Server do
     {:reply, :done, %State{model: model, context: ctx, usage: usage}}
   end
 
-  # TODO needs proper refactor
   @impl GenServer
   def handle_call(
         {:explain, mod, refs, q},
         _from,
-        state = %State{context: ctx, usage: usg, model: model}
+        state = %State{usage: usg, model: model}
       ) do
-    case Introspect.module(mod) do
-      {:ok, module_file} ->
-        ref_files =
-          refs
-          |> Enum.map(fn ref -> Introspect.module(ref) end)
-          |> Enum.flat_map(fn
-            {:ok, d} -> [d]
-            {:error, _r} -> []
-          end)
-          |> Enum.reduce("", fn l, r -> l <> "\n" <> r end)
+    with {:ok, module_file} <- Introspect.module(mod) do
+      ref_files = get_ref_files(refs)
 
-        req = Context.user(Prompts.explain_module(module_file, ref_files, q))
+      main_msg = Context.user(module_file, %{ref: mod})
 
-        {usage, ctx} =
-          case LLMAdapter.generate_text(model, Context.to_list(Context.append(ctx, req))) do
-            {:error, resp} ->
-              handle_error(resp)
-              {usg, ctx}
+      ref_msgs =
+        Enum.map(ref_files, fn {ref_name, content} ->
+          Context.user(content, %{ref: ref_name})
+        end)
 
-            {:ok, resp} ->
-              update_context(req, resp, state)
-          end
+      query_msg = if q == nil, do: Context.user("explain #{mod}"), else: Context.user(q)
 
-        usage = Map.put(usg, model, usage)
-        {:reply, :done, %State{context: ctx, model: model, usage: usage}}
+      all_new_file_messages = [main_msg | ref_msgs]
 
+      temp_ctx = upsert_messages(state.context, all_new_file_messages)
+      temp_ctx = Context.append(temp_ctx, query_msg)
+
+      case LLMAdapter.generate_text(model, Context.to_list(temp_ctx)) do
+        {:error, resp} ->
+          handle_error(resp)
+          {:reply, :done, state}
+
+        {:ok, resp} ->
+          usage = Map.merge(resp.usage, usg[model], fn _k, l, r -> l + r end)
+          text = Response.text(resp)
+          final_ctx = Context.append(temp_ctx, Context.assistant(text))
+          Output.send_response(text)
+          updated_usage = Map.put(usg, model, usage)
+          {:reply, :done, %State{state | context: final_ctx, usage: updated_usage}}
+      end
+    else
       {:error, reason} ->
         Output.send_error("Failed to explain module: #{reason}")
         {:reply, :done, state}
@@ -164,6 +169,41 @@ defmodule Karn.Server do
       |> Map.put(:usage, new_usage)
 
     {:reply, :ok, new_state}
+  end
+
+  defp upsert_messages(context, messages_to_upsert) do
+    existing_messages = Context.to_list(context)
+
+    final_messages =
+      Enum.reduce(messages_to_upsert, existing_messages, fn new_msg, acc_messages ->
+        ref_to_find = new_msg.metadata[:ref]
+
+        index =
+          if ref_to_find do
+            Enum.find_index(acc_messages, fn msg ->
+              msg.metadata && msg.metadata[:ref] == ref_to_find
+            end)
+          else
+            nil
+          end
+
+        if index do
+          List.replace_at(acc_messages, index, new_msg)
+        else
+          acc_messages ++ [new_msg]
+        end
+      end)
+
+    Context.new(final_messages)
+  end
+
+  defp get_ref_files(refs) do
+    refs
+    |> Enum.map(fn ref -> {ref, Introspect.module(ref)} end)
+    |> Enum.flat_map(fn
+      {_ref, {:error, _reason}} -> []
+      {ref, {:ok, content}} -> [{ref, content}]
+    end)
   end
 
   defp new() do

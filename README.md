@@ -35,10 +35,11 @@ mix deps.get
 - [x] Error handling
 - [x] Timeouts
 - [x] Igniter Installation
-- [ ] context cachinig
+- [x] context cachinig
 - [ ] docs
 - [ ] cleanup
 - [ ] default models for common providers
+- [ ] upgrade to stable version of reqllm
 
 
 ## Setup and Usage

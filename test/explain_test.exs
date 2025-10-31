@@ -4,7 +4,6 @@ defmodule Karn.ExplainTest do
   alias Karn.Server
   alias Karn.LLMAdapterMock
   import Karn.Test.Fixtures
-  @moduletag :ak
 
   setup :set_mox_from_context
   setup :verify_on_exit!
@@ -34,6 +33,10 @@ defmodule Karn.ExplainTest do
     test "e/2 explains a module with a query" do
       assert Karn.e(Karn.AI, "What is this?") == :done
       assert_receive {:response, "Explanation complete."}
+      Karn.view_context()
+      assert_receive {:blocks, messages}
+      # system,module,query,response
+      assert length(messages) == 4
     end
 
     test "e/2 explains a module with a reference" do
@@ -49,6 +52,10 @@ defmodule Karn.ExplainTest do
     test "e/2 explains a module with multiple references" do
       assert Karn.e(Karn.AI, [Karn.Server, Karn.AI.Introspect]) == :done
       assert_receive {:response, "Explanation complete."}
+      Karn.view_context()
+      assert_receive {:blocks, messages}
+      # system,module AI,module Server,module Introspect,query,response
+      assert length(messages) == 5
     end
 
     test "e/3 explains a module with references and a query" do
@@ -64,6 +71,38 @@ defmodule Karn.ExplainTest do
     test "e/1 with non-existent module sends an error" do
       assert Karn.e(NonExistentModule) == :done
       assert_receive {:error, "Failed to explain module: Invalid module provided"}
+    end
+
+    test "e/1 with existing ref updates the message in context" do
+      assert Karn.e(Karn.AI) == :done
+      assert_receive {:response, "Explanation complete."}
+
+      assert GenServer.call(Server, :view_state) == :done
+      assert_receive {:state, state_before}
+
+      messages_before = state_before.context |> ReqLLM.Context.to_list()
+
+      count_before =
+        Enum.count(messages_before, fn msg ->
+          msg.metadata && msg.metadata[:ref] == Karn.AI
+        end)
+
+      assert count_before == 1
+
+      assert Karn.e(Karn.AI) == :done
+      assert_receive {:response, "Explanation complete."}
+
+      assert Karn.view_state() == :done
+      assert_receive {:state, state_after}
+
+      messages_after = state_after.context |> ReqLLM.Context.to_list()
+
+      count_after =
+        Enum.count(messages_after, fn msg ->
+          msg.metadata && msg.metadata[:ref] == Karn.AI
+        end)
+
+      assert count_after == 1
     end
   end
 end

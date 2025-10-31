@@ -1,6 +1,5 @@
 defmodule Karn.AI.IntrospectTest do
   use ExUnit.Case, async: true
-  @moduletag :aa
 
   alias Karn.AI.Introspect
 

@@ -18,7 +18,7 @@ defmodule Karn.AI.Introspect do
   ## Examples
 
       iex> Karn.Ai.Introspect.module(Karn.Ai.Introspect)
-      {:ok, "defmodule Karn.Ai.Introspect do\n\n  # TODO decide how to handle\n  # introspection for kernel using Code.fetch_docs()\n  # Or integration with tide wave\n  def module(m) do\n  ...\n"}
+      {:ok, "defmodule Karn.Ai.Introspect do\n\n  # introspection for kernel using Code.fetch_docs()\n  # Or integration with tide wave\n  def module(m) do\n  ...\n"}
 
       iex> Karn.Ai.Introspect.module(Enum)
       {:ok, "Enum from std lib of elixir"}
