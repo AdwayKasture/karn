@@ -3,10 +3,10 @@ defmodule Karn.AI.Models do
   """
   alias ReqLLM.Provider.Registry
 
-  @default "google:gemini-2.0-flash"
-
   @spec default :: String.t()
-  def default, do: @default
+  def default do
+    Application.get_env(:karn, :default_model, "google:gemini-2.0-flash")
+  end
 
   @spec valid(String.t()) :: :ok | {:error, String.t()}
   def valid(model) do

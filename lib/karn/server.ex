@@ -52,7 +52,7 @@ defmodule Karn.Server do
     req = Context.user(cmd)
 
     {usage, ctx} =
-      case LLMAdapter.generate_text(model, Context.to_list(Context.append(ctx,req))) do
+      case LLMAdapter.generate_text(model, Context.to_list(Context.append(ctx, req))) do
         {:error, resp} ->
           handle_error(resp)
           {usg, ctx}
@@ -72,7 +72,6 @@ defmodule Karn.Server do
         _from,
         state = %State{context: ctx, usage: usg, model: model}
       ) do
-
     case Introspect.module(mod) do
       {:ok, module_file} ->
         ref_files =
@@ -87,7 +86,7 @@ defmodule Karn.Server do
         req = Context.user(Prompts.explain_module(module_file, ref_files, q))
 
         {usage, ctx} =
-          case LLMAdapter.generate_text(model, Context.to_list(Context.append(ctx,req))) do
+          case LLMAdapter.generate_text(model, Context.to_list(Context.append(ctx, req))) do
             {:error, resp} ->
               handle_error(resp)
               {usg, ctx}
@@ -159,9 +158,10 @@ defmodule Karn.Server do
         output_cost: 0.0
       })
 
-    new_state  = state
-    |> Map.put(:model, model)
-    |> Map.put(:usage, new_usage)
+    new_state =
+      state
+      |> Map.put(:model, model)
+      |> Map.put(:usage, new_usage)
 
     {:reply, :ok, new_state}
   end

@@ -44,8 +44,9 @@ defmodule Karn.AI.Introspect do
         v -> v
       end
     else
-      :non_existing -> {:error, "Invalid module provided"}
-        #{:error, :beam_lib, reason} -> {:error, "#{m}: failed to read chunks;\n #{reason}"}
+      :non_existing ->
+        {:error, "Invalid module provided"}
+        # {:error, :beam_lib, reason} -> {:error, "#{m}: failed to read chunks;\n #{reason}"}
     end
   end
 

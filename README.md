@@ -34,10 +34,12 @@ mix deps.get
 - [x] Tests
 - [x] Error handling
 - [x] Timeouts
-- [ ] Igniter Installation
+- [x] Igniter Installation
 - [ ] context cachinig
 - [ ] docs
 - [ ] cleanup
+- [ ] default models for common providers
+
 
 ## Setup and Usage
 

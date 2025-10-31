@@ -16,7 +16,7 @@ defmodule Karn.Output.IO do
 
   @impl Output
   def send_blocks(messages) do
-    Enum.map(messages, fn %{role: role, text: text} -> print_block(role, text) end)
+    Enum.each(messages, fn %{role: role, text: text} -> print_block(role, text) end)
     :ok
   end
 
