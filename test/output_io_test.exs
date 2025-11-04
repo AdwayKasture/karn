@@ -6,39 +6,40 @@ defmodule Karn.Output.IOTest do
   alias ReqLLM.Context
 
   describe "send_response/1" do
-    test "prints the message to IO" do
+    test "prints the message to IO in a box" do
       output = capture_io(fn -> IO.send_response("Hello, world!") end)
-      assert output == "Hello, world!
-"
+      assert output =~ "╭─ assistant ─"
+      assert output =~ "│ Hello, world!"
+      assert output =~ "╰"
     end
   end
 
   describe "send_error/1" do
-    test "prints the error message to IO" do
+    test "prints the error message to IO in a box" do
       output = capture_io(fn -> IO.send_error("An error occurred.") end)
-      assert output == "An error occurred.
-"
+      assert output =~ "╭─ error ─"
+      assert output =~ "│ An error occurred."
+      assert output =~ "╰"
     end
   end
 
   describe "send_blocks/1" do
-    test "prints formatted blocks" do
+    test "prints formatted blocks in boxes" do
       messages = [
         %{role: :user, text: "User query"},
         %{role: :assistant, text: "Assistant response"}
       ]
 
       output = capture_io(fn -> IO.send_blocks(messages) end)
-      assert output =~ "user:"
-      assert output =~ "User query"
-      assert output =~ "assistant:"
-      assert output =~ "Assistant response"
-      assert output =~ "------------------------------------------------------"
+      assert output =~ "╭─ user ─"
+      assert output =~ "│ User query"
+      assert output =~ "╭─ assistant ─"
+      assert output =~ "│ Assistant response"
     end
   end
 
   describe "send_usage/1" do
-    test "prints formatted usage statistics for multiple models" do
+    test "prints formatted usage statistics for multiple models in boxes" do
       usage_map = %{
         "model-1" => %{
           input_tokens: 10,
@@ -64,18 +65,18 @@ defmodule Karn.Output.IOTest do
 
       output = capture_io(fn -> IO.send_usage(usage_map) end)
 
-      assert output =~ "Model: model-1"
-      assert output =~ "Input tokens:      10"
-      assert output =~ "Total Cost:   $0.00100000"
-      assert output =~ "Model: model-2"
-      assert output =~ "Input tokens:      100"
-      assert output =~ "Total Cost:   $0.01000000"
-      assert output =~ "======================================================"
+      assert output =~ "╭─ Usage for model-1 ─"
+      assert output =~ "│   Input tokens:      10"
+      assert output =~ "│   Total Cost:   $0.00100000"
+      assert output =~ "╭─ Usage for model-2 ─"
+      assert output =~ "│   Input tokens:      100"
+      assert output =~ "│   Total Cost:   $0.01000000"
+      assert output =~ "╰"
     end
   end
 
   describe "send_state/1" do
-    test "prints the full state including context, model, and usage" do
+    test "prints the full state including context, model, and usage in boxes" do
       context =
         Context.new()
         |> Context.append(Context.system("System prompt"))
@@ -101,15 +102,15 @@ defmodule Karn.Output.IOTest do
       output = capture_io(fn -> IO.send_state(state) end)
 
       # Check for context blocks
-      assert output =~ "system:"
-      assert output =~ "System prompt"
-      assert output =~ "user:"
-      assert output =~ "User query"
+      assert output =~ "╭─ system ─"
+      assert output =~ "│ System prompt"
+      assert output =~ "╭─ user ─"
+      assert output =~ "│ User query"
       # Check for model
       assert output =~ "model: test-model"
       # Check for usage
-      assert output =~ "Model: test-model"
-      assert output =~ "Input tokens:      1"
+      assert output =~ "╭─ Usage for test-model ─"
+      assert output =~ "│   Input tokens:      1"
     end
   end
 end

@@ -10,12 +10,12 @@ defmodule Karn.Output.IO do
 
   @impl Output
   def send_response(message) do
-    IO.puts(message)
+    print_block(:assistant, message)
   end
 
   @impl Output
   def send_error(message) do
-    IO.puts(message)
+    print_block(:error, message)
   end
 
   @impl Output
@@ -26,7 +26,7 @@ defmodule Karn.Output.IO do
 
   @impl Output
   def send_usage(usage) do
-    print_usage_per_model(usage)
+    print_usage_per_model(usage, get_width())
   end
 
   @impl Output
@@ -41,35 +41,105 @@ defmodule Karn.Output.IO do
 
     send_blocks(blocks)
     IO.puts("model: #{state.model}")
-    print_usage_per_model(state.usage)
+    print_usage_per_model(state.usage, get_width())
     :ok
   end
 
-  defp print_usage_per_model(usage_map) when is_map(usage_map) do
+  defp get_width do
+    case :io.columns() do
+      {:ok, width} when is_integer(width) and width > 0 -> width
+      _ -> 80
+    end
+  end
+
+  defp print_usage_per_model(usage_map, width) when is_map(usage_map) do
+    box_width = width - 2
+    content_width = box_width - 2
+
     Enum.each(usage_map, fn {model_name, stats} ->
-      IO.puts("======================================================")
-      IO.puts("Model: #{model_name}")
-      IO.puts("------------------------------------------------------")
-      IO.puts(~s|  Input tokens:      #{stats.input_tokens}|)
-      IO.puts(~s|  Output tokens:     #{stats.output_tokens}|)
-      IO.puts(~s|  Cached tokens:     #{stats.cached_tokens}|)
-      IO.puts(~s|  Reasoning tokens:  #{stats.reasoning_tokens}|)
-      IO.puts(~s|  Total tokens:      #{stats.total_tokens}|)
-      IO.puts("======================================================")
-      IO.puts(~s|  Total Cost:   $#{format_num(stats.total_cost)}|)
-      IO.puts(~s|  Input Cost:   $#{format_num(stats.input_cost)}|)
-      IO.puts(~s|  Output Cost:  $#{format_num(stats.output_cost)}|)
+      title = " Usage for #{model_name} "
+
+      IO.puts("╭─" <> title <> String.duplicate("─", box_width - 2 - String.length(title)) <> "╮")
+
+      lines = [
+        "  Input tokens:      #{stats.input_tokens}",
+        "  Output tokens:     #{stats.output_tokens}",
+        "  Cached tokens:     #{stats.cached_tokens}",
+        "  Reasoning tokens:  #{stats.reasoning_tokens}",
+        "  Total tokens:      #{stats.total_tokens}",
+        String.duplicate("─", content_width),
+        "  Total Cost:   $#{format_num(stats.total_cost)}",
+        "  Input Cost:   $#{format_num(stats.input_cost)}",
+        "  Output Cost:  $#{format_num(stats.output_cost)}"
+      ]
+
+      Enum.each(lines, fn line ->
+        padding = content_width - String.length(line)
+        IO.puts("│ " <> line <> String.duplicate(" ", padding) <> " │")
+      end)
+
+      IO.puts("╰" <> String.duplicate("─", box_width) <> "╯")
     end)
 
-    IO.puts("======================================================")
     :ok
   end
 
   defp print_block(role, text) do
-    IO.puts("#{role}:")
-    IO.puts(text)
-    IO.puts("------------------------------------------------------")
+    width = get_width()
+    box_width = width - 2
+    content_width = box_width - 2
+
+    title = " #{role} "
+    IO.puts("╭─" <> title <> String.duplicate("─", box_width - 1 - String.length(title)) <> "╮")
+
+    text
+    |> String.split("\n")
+    |> Enum.each(fn line ->
+      wrapped_lines = wrap(line, content_width)
+
+      Enum.each(wrapped_lines, fn wrapped_line ->
+        padding = content_width - String.length(wrapped_line)
+        IO.puts("│ " <> wrapped_line <> String.duplicate(" ", padding) <> " │")
+      end)
+    end)
+
+    IO.puts("╰" <> String.duplicate("─", box_width) <> "╯")
+  end
+
+  defp wrap(text, max_len) do
+    if String.length(text) <= max_len do
+      [text]
+    else
+      words = String.split(text, " ")
+
+      {lines, last_line} =
+        Enum.reduce(words, {[], ""}, fn word, {acc, line} ->
+          if line == "" do
+            {acc, word}
+          else
+            if String.length(line <> " " <> word) > max_len do
+              {[line | acc], word}
+            else
+              {acc, line <> " " <> word}
+            end
+          end
+        end)
+
+      lines = Enum.reverse([last_line | lines])
+
+      # handle words longer than max_len
+      Enum.flat_map(lines, fn line ->
+        if String.length(line) > max_len do
+          String.graphemes(line)
+          |> Enum.chunk_every(max_len)
+          |> Enum.map(&Enum.join/1)
+        else
+          [line]
+        end
+      end)
+    end
   end
 
   defp format_num(d), do: :erlang.float_to_binary(d, decimals: 8)
 end
+

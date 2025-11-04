@@ -50,6 +50,9 @@ mix deps.get
 - [ ] add message id/sequencing for editing specific message
 - [ ] add more models in igniter installation 
 - [ ] update message on start for config of reqLLM on start
+- [ ] missing api key better handling 
+- [ ] e to pass referece modules in prompt to give more context to the LLM
+- [ ] gaurd rails / usage limit warning ,context size warning
 
 
 ## Setup and Usage
