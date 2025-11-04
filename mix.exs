@@ -1,26 +1,51 @@
 defmodule Karn.MixProject do
   use Mix.Project
 
+  @version "0.1.0"
+
+  @source_url "https://github.com/AdwayKasture/karn"
+
   def project do
     [
       app: :karn,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
       test_coverage: [
         ignore_modules: [Karn.AI.Prompts, Karn.Test.Fixtures, Mix.Tasks.Karn.Install.Docs]
+      ],
+      
+      #Hex 
+      description: description(),
+      package: package(),
+
+
+      #Docs
+      name: "Karn",
+      docs: [
+        main: "overview",
+        extras: [{"README.md", title: "Overview", filename: "overview"}]
       ]
+    ]
+  end
+
+  defp description do
+    "Karn is an interactive AI assistant for your Elixir codebase, designed to be used within an IEx session."
+  end
+
+  defp package do
+    [
+      maintainers: ["Adway Kasture"],
+      licenses: ["MIT"],
+      links: %{"GitHub" => @source_url}
     ]
   end
 
   # Run "mix help compile.app" to learn about applications.
   def application do
-    [
-      extra_applications: [:logger],
-      mod: {Karn.Application, []}
-    ]
+    []
   end
 
   # Run "mix help deps" to learn about dependencies.
@@ -31,8 +56,6 @@ defmodule Karn.MixProject do
       {:mox, "~> 1.2", only: [:test]},
       {:igniter, "~> 0.6", optional: true}
 
-      # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]
   end
 
