@@ -51,10 +51,13 @@ defmodule Karn.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:req_llm, "~> 1.0.0-rc.4"},
+      {:igniter, "~> 0.6", optional: true},
+
+      # Dev and testing
       {:mox, "~> 1.2", only: [:test]},
-      {:igniter, "~> 0.6", optional: true}
+      {:ex_doc, "~> 0.31", only: :dev, runtime: false},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
 
     ]
   end
