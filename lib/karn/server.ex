@@ -1,5 +1,4 @@
 defmodule Karn.Server do
-  alias ReqLLM.Providers.Anthropic.Context
   alias Karn.LLMAdapter
   alias Karn.AI.{Introspect, Prompts, Models}
   alias Karn.State
@@ -72,21 +71,33 @@ defmodule Karn.Server do
         _from,
         state = %State{usage: usg, model: model}
       ) do
-    with {:ok, module_file} <- Introspect.module(mod) do
-      ref_files = get_ref_files(refs)
+    all_modules = [mod | refs]
 
-      main_msg = Context.user(module_file, %{ref: mod})
+    introspection_results =
+      Enum.map(all_modules, fn module -> {module, Introspect.module(module)} end)
 
-      ref_msgs =
-        Enum.map(ref_files, fn {ref_name, content} ->
-          Context.user(content, %{ref: ref_name})
+    {successful_introspections, failed_introspections} =
+      Enum.split_with(introspection_results, fn {_, result} -> elem(result, 0) == :ok end)
+
+    Enum.each(failed_introspections, fn {module, {:error, reason}} ->
+      Output.send_error("Failed to introspect module #{module}: #{reason}")
+    end)
+
+    if Enum.any?(successful_introspections, fn {module, _} -> module == mod end) do
+      file_messages =
+        successful_introspections
+        |> Enum.map(fn {module, {:ok, content}} ->
+          Context.user(content, %{ref: module})
         end)
 
-      query_msg = Context.user(Prompts.explain_module(q))
+      valid_refs =
+        successful_introspections
+        |> Enum.map(fn {module, _} -> module end)
+        |> List.delete(mod)
 
-      all_new_file_messages = [main_msg | ref_msgs]
+      query_msg = Context.user(Prompts.explain_module(q, mod, valid_refs))
 
-      temp_ctx = upsert_messages(state.context, all_new_file_messages)
+      temp_ctx = upsert_messages(state.context, file_messages)
       temp_ctx = Context.append(temp_ctx, query_msg)
 
       case LLMAdapter.generate_text(model, Context.to_list(temp_ctx)) do
@@ -103,9 +114,11 @@ defmodule Karn.Server do
           {:reply, :done, %State{state | context: final_ctx, usage: updated_usage}}
       end
     else
-      {:error, reason} ->
-        Output.send_error("Failed to explain module: #{reason}")
-        {:reply, :done, state}
+      Output.send_error(
+        "Failed to explain module: Primary module #{mod} could not be introspected."
+      )
+
+      {:reply, :done, state}
     end
   end
 
@@ -195,15 +208,6 @@ defmodule Karn.Server do
       end)
 
     Context.new(final_messages)
-  end
-
-  defp get_ref_files(refs) do
-    refs
-    |> Enum.map(fn ref -> {ref, Introspect.module(ref)} end)
-    |> Enum.flat_map(fn
-      {_ref, {:error, _reason}} -> []
-      {ref, {:ok, content}} -> [{ref, content}]
-    end)
   end
 
   defp new() do

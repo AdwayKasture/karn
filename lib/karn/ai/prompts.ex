@@ -12,14 +12,20 @@ defmodule Karn.AI.Prompts do
     """
   end
 
-  def explain_module(q) do
+  def explain_module(q, mod, refs \\ []) do
     part =
       if q !== nil,
-        do: "Understand the above code and explain #{q}",
-        else: "Understand the above code and explain it."
+        do: "Understand the #{mod} code and explain #{q}",
+        else: "Understand the #{mod} code and explain it."
+
+    ref_part =
+      if refs != [],
+        do: "Keep in mind the following modules while answering: #{Enum.join(refs, ", ")}",
+        else: ""
 
     """
     #{part}
+    #{ref_part}
     If its a very large module share some key functions  and their working
     If you need any more information or have questions you can ask the user.
     You can also request user for specific modules.

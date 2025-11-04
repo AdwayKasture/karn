@@ -73,11 +73,10 @@ defmodule Karn.AI do
   Current (and default implementation) is IO as this is ment to be used through IEX
   * `:done`
   """
- 
+
   def q(cmd) do
     GenServer.call(@server, {:query, cmd})
   end
-
 
   @doc """
   Requests AI to explain any specific module.
@@ -95,7 +94,6 @@ defmodule Karn.AI do
   Current (and default implementation) is IO as this is ment to be used through IEX
   * `:done`
   """
-
 
   def e(mod), do: e(mod, [], nil)
 
@@ -122,7 +120,6 @@ defmodule Karn.AI do
     GenServer.call(@server, :usage)
   end
 
-
   @doc """
   Terminates the server,prints usage before end
 
@@ -135,7 +132,6 @@ defmodule Karn.AI do
     usage()
     GenServer.stop(@server, :normal)
   end
-
 
   @doc """
   View context
@@ -150,7 +146,6 @@ defmodule Karn.AI do
     GenServer.call(@server, :view_context)
   end
 
-
   @doc """
   View state of the server
 
@@ -162,7 +157,6 @@ defmodule Karn.AI do
   def view_state() do
     GenServer.call(@server, :view_state)
   end
-
 
   @doc """
   Reset context

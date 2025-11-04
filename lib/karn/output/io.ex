@@ -59,7 +59,7 @@ defmodule Karn.Output.IO do
     Enum.each(usage_map, fn {model_name, stats} ->
       title = " Usage for #{model_name} "
 
-      IO.puts("╭─" <> title <> String.duplicate("─", box_width - 2 - String.length(title)) <> "╮")
+      IO.puts("╭─" <> title <> String.duplicate("─", box_width - 1 - String.length(title)) <> "╮")
 
       lines = [
         "  Input tokens:      #{stats.input_tokens}",
@@ -142,4 +142,3 @@ defmodule Karn.Output.IO do
 
   defp format_num(d), do: :erlang.float_to_binary(d, decimals: 8)
 end
-

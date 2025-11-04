@@ -54,6 +54,19 @@ defmodule Karn.QueriesTest do
       assert_receive {:error, ^error_reason}
     end
 
+    test "handles missing API keys and sends error output", %{pid: _pid} do
+      mock_error =
+        "Invalid parameter: :api_key option or XAI_API_KEY env var (optionally via JidoKeys.put/2)"
+
+      expect(LLMAdapterMock, :generate_text, 1, fn _, _ -> {:error, mock_error} end)
+
+      msg = "Failed due to #{mock_error}"
+
+      assert Karn.q("Too long query") == :done
+
+      assert_receive {:error, ^msg}
+    end
+
     test "handles API request error and sends error output", %{pid: _pid} do
       mock_error = %ReqLLM.Error.API.Request{reason: "Time out", status: 400}
 

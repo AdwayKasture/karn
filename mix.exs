@@ -16,13 +16,12 @@ defmodule Karn.MixProject do
       test_coverage: [
         ignore_modules: [Karn.AI.Prompts, Karn.Test.Fixtures, Mix.Tasks.Karn.Install.Docs]
       ],
-      
-      #Hex 
+
+      # Hex 
       description: description(),
       package: package(),
 
-
-      #Docs
+      # Docs
       name: "Karn",
       docs: [
         main: "overview",
@@ -51,14 +50,13 @@ defmodule Karn.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:req_llm, "~> 1.0.0-rc.4"},
+      {:req_llm, "~> 1.0.0"},
       {:igniter, "~> 0.6", optional: true},
 
       # Dev and testing
       {:mox, "~> 1.2", only: [:test]},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
-
     ]
   end
 
