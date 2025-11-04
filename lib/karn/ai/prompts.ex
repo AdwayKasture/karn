@@ -13,7 +13,8 @@ defmodule Karn.AI.Prompts do
   end
 
   def explain_module(q) do
-    part = if q !== nil,
+    part =
+      if q !== nil,
         do: "Understand the above code and explain #{q}",
         else: "Understand the above code and explain it."
 

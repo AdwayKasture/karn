@@ -13,6 +13,11 @@ Karn is an interactive AI assistant for your Elixir codebase, designed to be use
 ## Installation
 
 Add `karn` as a dependency to your `mix.exs` file. It is recommended to add it only for the `:dev` environment.
+User can change the default model by adding to their dev config 
+``` elixir
+    config :my_app,Karn,default_model: "anthropic:model"
+
+```
 
 ```elixir
 def deps do
@@ -20,6 +25,12 @@ def deps do
     {:karn, "~> 0.1.0", only: [:dev]}
   ]
 end
+```
+
+One can also install Karn using igniter 
+```elixir
+    # picks suggested model to use 
+    mix igniter.install karn --google
 ```
 
 Then, fetch the dependencies:
@@ -30,17 +41,15 @@ mix deps.get
 
 ## Todo List
 
-- [x] Multi-model support
-- [x] Tests
-- [x] Error handling
-- [x] Timeouts
-- [x] Igniter Installation
-- [x] context cachinig
 - [ ] docs
 - [ ] cleanup
 - [ ] default models for common providers
 - [ ] upgrade to stable version of reqllm
 - [ ] integration tests
+- [ ] validate multimodel support
+- [ ] add message id/sequencing for editing specific message
+- [ ] add more models in igniter installation 
+- [ ] update message on start for config of reqLLM on start
 
 
 ## Setup and Usage

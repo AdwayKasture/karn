@@ -1,8 +1,5 @@
 defmodule Karn.LLMAdapter do
-  @moduledoc """
-  This is a wrapper around ReqLLM, its only added for testing, 
-  Once and idoimatic way of testing for reqllm is established use that 
-  """
+  @moduledoc false
 
   @callback generate_text(model :: atom(), context_list :: list()) ::
               {:ok, map()} | {:error, map()}

@@ -4,16 +4,17 @@ defmodule Mix.Tasks.Karn.InstallTest do
 
   @model_switches [
     {"--google", "google:gemini-2.0-flash"},
-    {"--openai", "openai:model"},
-    {"--anthropic", "anthropic"},
-    {"--xai", "grok:model"}
+    {"--openai", "openai:gpt-4o-mini"},
+    {"--anthropic", "anthropic:claude-3-5-haiku-20241022"}
   ]
 
   @moduledoc """
-  Keyword.get(parsed_opts,:google) -> "google:gemini-2.0-flash" 
-        Keyword.get(parsed_opts,:anthropic) -> "anthropic"
-        Keyword.get(parsed_opts,:openai) -> "openai:model"
-        Keyword.get(parsed_opts,:xai) -> "grok:model"
+         cond do
+           Keyword.has_key?(opts,:google) -> {"google:gemini-2.0-flash","https://hexdocs.pm/req_llm/ReqLLM.Providers.Google.html"} 
+           Keyword.has_key?(opts, :anthropic) -> {"anthropic:claude-3-5-haiku-20241022","https://hexdocs.pm/req_llm/ReqLLM.Providers.Anthropic.html"}
+           Keyword.has_key?(opts, :openai) -> {"openai:gpt-4o-mini","https://hexdocs.pm/req_llm/ReqLLM.Providers.OpenAI.html"}
+           true -> {"google:gemini-2.0-flash","https://hexdocs.pm/req_llm/ReqLLM.Providers.Google.html"}
+         end
 
   """
 
@@ -23,9 +24,11 @@ defmodule Mix.Tasks.Karn.InstallTest do
     # run our task
     |> Igniter.compose_task("karn.install", [])
     # see tools in `Igniter.Test` for available assertions & helpers
-    |> assert_has_notice(
-      "Installation done !!!,add your api keys to the environment and you are good to go !!"
-    )
+    |> assert_has_notice("""
+    Installation done !!!
+    configure your enviornment as mentioned on
+    https://hexdocs.pm/req_llm/ReqLLM.Providers.Google.html
+    """)
   end
 
   test "default model selection" do
@@ -54,5 +57,23 @@ defmodule Mix.Tasks.Karn.InstallTest do
         """
       )
     end
+  end
+
+  test "correct docs picked up" do
+    [app_name: :karn]
+    |> test_project()
+    |> Igniter.compose_task("karn.install", ["arg", "--anthropic"])
+    |> assert_has_patch(
+      "config/dev.exs",
+      """
+      |config :karn, Karn, default_model: "anthropic:claude-3-5-haiku-20241022", output: Karn.Output.IO
+      |
+      """
+    )
+    |> assert_has_notice("""
+    Installation done !!!
+    configure your enviornment as mentioned on
+    https://hexdocs.pm/req_llm/ReqLLM.Providers.Anthropic.html
+    """)
   end
 end

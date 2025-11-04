@@ -24,9 +24,8 @@ defmodule Mix.Tasks.Karn.Install.Docs do
 
     ## Options
 
-    * `--claude`
+    * `--anthropic`
     * `--google`
-    * `--xai`
     * `--openai`
     """
   end
@@ -77,13 +76,20 @@ if Code.ensure_loaded?(Igniter) do
       app_name = Igniter.Project.Application.app_name(igniter)
       opts = igniter.args.options
 
-      model =
+      {model, url} =
         cond do
-          # Keyword.has_key?(opts,:google) -> "google:gemini-2.0-flash" 
-          Keyword.has_key?(opts, :anthropic) -> "anthropic"
-          Keyword.has_key?(opts, :openai) -> "openai:model"
-          Keyword.has_key?(opts, :xai) -> "grok:model"
-          true -> "google:gemini-2.0-flash"
+          Keyword.has_key?(opts, :google) ->
+            {"google:gemini-2.0-flash", "https://hexdocs.pm/req_llm/ReqLLM.Providers.Google.html"}
+
+          Keyword.has_key?(opts, :anthropic) ->
+            {"anthropic:claude-3-5-haiku-20241022",
+             "https://hexdocs.pm/req_llm/ReqLLM.Providers.Anthropic.html"}
+
+          Keyword.has_key?(opts, :openai) ->
+            {"openai:gpt-4o-mini", "https://hexdocs.pm/req_llm/ReqLLM.Providers.OpenAI.html"}
+
+          true ->
+            {"google:gemini-2.0-flash", "https://hexdocs.pm/req_llm/ReqLLM.Providers.Google.html"}
         end
 
       # Do your work here and return an updated igniter
@@ -92,9 +98,11 @@ if Code.ensure_loaded?(Igniter) do
         default_model: model,
         output: Karn.Output.IO
       )
-      |> Igniter.add_notice(
-        "Installation done !!!,add your api keys to the environment and you are good to go !!"
-      )
+      |> Igniter.add_notice("""
+      Installation done !!!
+      configure your enviornment as mentioned on
+      #{url}
+      """)
     end
   end
 else

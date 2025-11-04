@@ -1,6 +1,6 @@
 defmodule Karn.AI.Models do
-  @moduledoc """
-  """
+  @moduledoc false
+
   alias ReqLLM.Provider.Registry
 
   @spec default :: String.t()
@@ -49,4 +49,10 @@ defmodule Karn.AI.Models do
       _ -> {:error, "No such provider exists"}
     end
   end
+
+  def google, do: "google:gemini-2.0-flash"
+
+  def anthropic, do: "anthropic:claude-3-5-haiku-20241022"
+
+  def closedai, do: "openai:gpt-4o-mini"
 end

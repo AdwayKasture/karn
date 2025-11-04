@@ -4,6 +4,10 @@ defmodule Karn.Output.IO do
   alias Karn.Output
   @behaviour Output
 
+  @moduledoc """
+  Sends messages from the LLM to IO (Iex)
+  """
+
   @impl Output
   def send_response(message) do
     IO.puts(message)

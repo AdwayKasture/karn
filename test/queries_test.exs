@@ -73,7 +73,7 @@ defmodule Karn.QueriesTest do
 
       msg = "Failed due to #{error_reason}"
 
-      assert_receive {:error, msg}
+      assert_receive {:error, ^msg}
     end
 
     test "state is same after error", %{pid: _pid} do
