@@ -1,7 +1,6 @@
 defmodule Karn do
   @moduledoc """
-  A client interface for interacting with the main AI service, managed by
-  `Karn.Server`.
+  A client interface for interacting with the main AI service
 
   This module provides convenient functions for querying the AI, explaining code
   or modules,
@@ -33,124 +32,45 @@ defmodule Karn do
 
   alias Karn.AI
 
-  @doc """
-  Starts the AI server.
-
-  ## Parameters
-  * `opts`: A keyword list of options to pass to the server. See `Karn.AI.Server.start_link/1` for more information.
-
-  ## Returns
-  * `{:ok, pid}` if the server was started successfully.
-  * `{:error, reason}` otherwise.
-  """
+  @doc delegate_to: {AI,:start,1}
   defdelegate start(), to: AI
+
+  @doc delegate_to: {AI,:start,1}
   defdelegate start(opts), to: AI
 
-  @doc """
-  Switches the model used by the AI server.
-
-  ## Parameters
-  * `model`: The name of the model to switch to.
-
-  ## Returns
-  * `:ok` if the model was switched successfully.
-  * `{:error, :not_found}` if the model is not available.
-  """
+  @doc delegate_to: {AI,:switch_model,1}
   defdelegate switch_model(model), to: AI
 
-  @doc """
-  Resets the model to the default.
-
-  ## Returns
-  * `:ok` if the model was switched successfully.
-  """
+  @doc delegate_to: {AI,:reset_model,1}
   defdelegate reset_model(), to: AI
 
-  @doc """
-  Sends a natural language query (`cmd`) to the AI server.
 
-  This is the primary function for asking the AI questions or giving it instructions.
-  You can ask follow up questions on previous queries and explainations.
-
-  ## Parameters
-  * `cmd`: The string command or query to send to the AI.
-
-  ## Returns
-  The response from the AI server (content and format depend on the server implementation).
-  Current (and default implementation) is IO as this is ment to be used through IEX
-  * `:done`
-  """
+  @doc delegate_to: {AI,:q,1}
   defdelegate q(cmd), to: AI
 
-  @doc """
-  Requests AI to explain any specific module.
 
-  ## Parameters
-  * `mod`: The module to explain
-  * `refs`: The list of modules which are related to `mod` defaults to `[]`
-  * `q`: The specific question you have about the module/ functions, else a breif explaination is given
-  The user can ask follow up questions using `q/1`
-  NOTE: Currently the modules are not cached (on client or server)
-  NOTE: Feeding too many modules might bloat the context, you can reduce context by firing `reset_context`
 
-  ## Returns
-  The response from the AI server (content and format depend on the server implementation).
-  Current (and default implementation) is IO as this is ment to be used through IEX
-  * `:done`
-  """
+  @doc delegate_to: {AI,:e,1}
   defdelegate e(mod), to: AI
   defdelegate e(mod, q_or_refs), to: AI
   defdelegate e(mod, refs, q), to: AI
 
-  @doc """
-  Shows usage per model basis
 
-  ## Returns
-  The response from the AI server (content and format depend on the server implementation).
-  Current (and default implementation) is IO as this is ment to be used through IEX
-  * `:done`
-  """
+  @doc delegate_to: {AI,:usage,1}
   defdelegate usage(), to: AI
 
-  @doc """
-  Terminates the server,prints usage before end
 
-  ## Returns
-  The response from the AI server (content and format depend on the server implementation).
-  Current (and default implementation) is IO as this is ment to be used through IEX
-  """
+  @doc delegate_to: {AI,:stop,0}
   defdelegate stop(), to: AI
 
-  @doc """
-  View context
 
-  ## Returns
-  The response from the AI server (content and format depend on the server implementation).
-  Current (and default implementation) is IO as this is ment to be used through IEX
-  * `:done`
-  """
+  @doc delegate_to: {AI,:view_context,0}
   defdelegate view_context(), to: AI
 
-  @doc """
-  View state of the server
-
-  ## Returns
-  The response from the AI server (content and format depend on the server implementation).
-  Current (and default implementation) is IO as this is ment to be used through IEX
-  * `:done`
-  """
+  @doc delegate_to: {AI,:view_state,0}
   defdelegate view_state(), to: AI
 
-  @doc """
-  Reset context
 
-  ## Parameters
-  * `sys`: Optional system prompt, if non is resorts to default
-
-  ## Returns
-  The response from the AI server (content and format depend on the server implementation).
-  Current (and default implementation) is IO as this is ment to be used through IEX
-  * `:done`
-  """
+  @doc delegate_to: {AI,:reset_context,1}
   defdelegate reset_context(sys \\ nil), to: AI
 end
