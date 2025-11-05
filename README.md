@@ -4,7 +4,7 @@ Karn is an interactive AI assistant for your Elixir codebase, designed to be use
 
 
 Karn version 0.1.0 is out, but there is still some cleanup pending before "stable"
-## Todo List
+## Roadmap for stable release
 
 - [x] docs
 - [ ] cleanup
