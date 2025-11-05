@@ -54,14 +54,18 @@ if Code.ensure_loaded?(Igniter) do
         # An example invocation
         example: __MODULE__.Docs.example(),
         # A list of environments that this should be installed in.
-        only: nil,
+        only: [:dev],
         # a list of positional arguments, i.e `[:file]`
         positional: [],
         # Other tasks your task composes using `Igniter.compose_task`, passing in the CLI argv
         # This ensures your option schema includes options from nested tasks
         composes: [],
         # `OptionParser` schema
-        schema: [],
+        schema: [
+          anthropic: :boolean,
+          google: :boolean,
+          openai: :boolean
+        ],
         # Default values for the options in the `schema`
         defaults: [],
         # CLI aliases

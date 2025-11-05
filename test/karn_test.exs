@@ -14,7 +14,7 @@ defmodule KarnTest do
     test "start server prints the default greeting" do
       {:ok, _pid} = Karn.start()
       p = Prompts.start_prompt()
-      assert_receive {:response,^p}
+      assert_receive {:response, ^p}
     end
 
     test "start with valid model prints the default greeting" do
@@ -35,8 +35,8 @@ defmodule KarnTest do
 
     test "stop" do
       Karn.start()
-      p =  Karn.AI.Prompts.start_prompt()
-      assert_receive {:response,^p}
+      p = Karn.AI.Prompts.start_prompt()
+      assert_receive {:response, ^p}
       Karn.stop()
       assert_receive {:usage, _}
     end

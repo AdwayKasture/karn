@@ -103,6 +103,8 @@ defmodule Karn.AI do
 
   def e(mod, ref) when is_atom(ref), do: e(mod, [ref], nil)
 
+  def e(mod, ref, q) when is_atom(ref), do: e(mod, [ref], q)
+
   def e(mod, refs, q) do
     GenServer.call(@server, {:explain, mod, refs, q})
   end

@@ -8,16 +8,6 @@ defmodule Mix.Tasks.Karn.InstallTest do
     {"--anthropic", "anthropic:claude-3-5-haiku-20241022"}
   ]
 
-  @moduledoc """
-         cond do
-           Keyword.has_key?(opts,:google) -> {"google:gemini-2.0-flash","https://hexdocs.pm/req_llm/ReqLLM.Providers.Google.html"} 
-           Keyword.has_key?(opts, :anthropic) -> {"anthropic:claude-3-5-haiku-20241022","https://hexdocs.pm/req_llm/ReqLLM.Providers.Anthropic.html"}
-           Keyword.has_key?(opts, :openai) -> {"openai:gpt-4o-mini","https://hexdocs.pm/req_llm/ReqLLM.Providers.OpenAI.html"}
-           true -> {"google:gemini-2.0-flash","https://hexdocs.pm/req_llm/ReqLLM.Providers.Google.html"}
-         end
-
-  """
-
   test "sanity check" do
     # generate a test project
     test_project()

@@ -2,6 +2,21 @@
 
 Karn is an interactive AI assistant for your Elixir codebase, designed to be used within an `IEx` session. It helps you understand and query your code using natural language, leveraging the power of Large Language Models.
 
+
+Karn version 0.1.0 is out, but there is still some cleanup pending before "stable"
+## Todo List
+
+- [x] docs
+- [ ] cleanup
+- [x] default models for common providers
+- [x] upgrade to stable version of reqllm
+- [ ] integration tests
+- [ ] validate multimodel support
+- [x] update message on start for config of reqLLM on start
+- [x] missing api key better handling 
+- [x] e to pass referece modules in prompt to give more context to the LLM
+
+
 ## Features
 
 *   **Natural Language Queries**: Ask questions about your code in plain English.
@@ -28,32 +43,18 @@ end
 ```
 
 One can also install Karn using igniter 
-```elixir
-    # picks suggested model to use 
+```shell
+    # use google model 
     mix igniter.install karn --google
 ```
+
+Supported options are `--google`,`--anthropic`,`--openai`
 
 Then, fetch the dependencies:
 
 ```shell
 mix deps.get
 ```
-
-## Todo List
-
-- [ ] docs
-- [ ] cleanup
-- [ ] default models for common providers
-- [ ] upgrade to stable version of reqllm
-- [ ] integration tests
-- [ ] validate multimodel support
-- [ ] add message id/sequencing for editing specific message
-- [ ] add more models in igniter installation 
-- [ ] update message on start for config of reqLLM on start
-- [x] missing api key better handling 
-- [x] e to pass referece modules in prompt to give more context to the LLM
-- [ ] gaurd rails / usage limit warning ,context size warning
-
 
 ## Setup and Usage
 
@@ -64,9 +65,11 @@ Karn is designed to be used interactively within an `IEx` session.
 Start your project's `IEx` session:
 
 ```shell
-iex -S mix phx.server
-#
-iex -S mix run
+    # phoenix application
+    iex -S mix phx.server
+
+    # generic
+    iex -S mix run
 ```
 
 ### 2. Configure API Key
@@ -95,11 +98,9 @@ Start the `Karn.Ai.Server` process:
 Karn.start
 ```
 
-You should see the message: `"Ask your elixir query"`
-
 ### 4. Use Karn
 
-For a more human-friendly experience, import the `Karn.Ai` functions into your `IEx` shell. This allows you to call them directly.
+For a more human-friendly experience, import the `Karn` functions into your `IEx` shell. This allows you to call them directly.
 
 ```elixir
 iex> import Karn
@@ -127,10 +128,13 @@ iex> e MyModule
 # Get a specific explanation of MyModule
 iex> e MyModule,"How does function b work?"
 
+# only 1 reference
+iex> e MyModule,ModuleB,"How are the two modules related"
+
+# multiple references
 iex> e MyModule,[ModuleB],"How are the two modules related"
 
-
-# Ask a specific question about MyModule, providing another module for context
+#Ask a specific question about MyModule, providing another module for context
 iex> e MyModule, [MyOtherModule], "How does the main function work?"
 ```
 

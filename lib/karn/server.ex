@@ -227,7 +227,6 @@ defmodule Karn.Server do
     end
   end
 
-  # TODO extract common handling for query and explain
   defp update_context(req, resp, state) when is_struct(state, State) do
     usage = Map.merge(resp.usage, state.usage[state.model], fn _k, l, r -> l + r end)
     text = Response.text(resp)

@@ -1,5 +1,5 @@
 defmodule Karn.AI.Prompts do
-  @doc false
+  @moduledoc false
 
   def base() do
     """
@@ -31,7 +31,6 @@ defmodule Karn.AI.Prompts do
     You can also request user for specific modules.
     """
   end
-
 
   def start_prompt() do
     """
