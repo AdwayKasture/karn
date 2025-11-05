@@ -135,7 +135,7 @@ iex> e MyModule,ModuleB,"How are the two modules related"
 iex> e MyModule,[ModuleB],"How are the two modules related"
 
 #Ask a specific question about MyModule, providing another module for context
-iex> e MyModule, [MyOtherModule], "How does the main function work?"
+iex> e MyModule, MyOtherModule, "How does the main function work?"
 ```
 
 #### View Conversation Context (`view_context/0`)
