@@ -39,7 +39,7 @@ defmodule Karn.Server do
 
   @impl GenServer
   def handle_info(:start, state) do
-    Output.send_response("Ask your elixir query")
+    Output.send_response(Prompts.start_prompt())
     {:noreply, state}
   end
 

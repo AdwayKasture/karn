@@ -2,6 +2,7 @@ defmodule Karn.ContextTest do
   use ExUnit.Case, async: false
   import Mox
   alias Karn.Server
+  alias Karn.AI.Prompts
   alias Karn.LLMAdapterMock
   import Karn.Test.Fixtures
 
@@ -16,7 +17,8 @@ defmodule Karn.ContextTest do
   describe "Context Handling" do
     setup do
       {:ok, pid} = start_supervised({Server, [name: Server]})
-      assert_receive {:response, "Ask your elixir query"}
+      p = Prompts.start_prompt()
+      assert_receive {:response, ^p}
       {:ok, %{pid: pid}}
     end
 

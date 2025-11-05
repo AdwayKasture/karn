@@ -1,4 +1,5 @@
 defmodule KarnTest do
+  alias Karn.AI.Prompts
   use ExUnit.Case, async: false
   import Mox
 
@@ -12,12 +13,14 @@ defmodule KarnTest do
   describe "starting and stopping server" do
     test "start server prints the default greeting" do
       {:ok, _pid} = Karn.start()
-      assert_receive {:response, "Ask your elixir query"}
+      p = Prompts.start_prompt()
+      assert_receive {:response,^p}
     end
 
     test "start with valid model prints the default greeting" do
       {:ok, _pid} = Karn.start(model: "anthropic:claude-sonnet-4-5-20250929")
-      assert_receive {:response, "Ask your elixir query"}
+      p = Prompts.start_prompt()
+      assert_receive {:response, ^p}
     end
 
     test "start with invalid model sends an error" do
@@ -32,7 +35,8 @@ defmodule KarnTest do
 
     test "stop" do
       Karn.start()
-      assert_receive {:response, "Ask your elixir query"}
+      p =  Karn.AI.Prompts.start_prompt()
+      assert_receive {:response,^p}
       Karn.stop()
       assert_receive {:usage, _}
     end
