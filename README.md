@@ -30,7 +30,9 @@ Karn version 0.1.0 is out, but there is still some cleanup pending before "stabl
 Add `karn` as a dependency to your `mix.exs` file. It is recommended to add it only for the `:dev` environment.
 User can change the default model by adding to their dev config 
 ``` elixir
-    config :my_app,Karn,default_model: "anthropic:model"
+    config :karn,
+       default_model: "anthropic:claude-3-5-haiku-20241022",
+       output: Karn.Output.IO
 
 ```
 

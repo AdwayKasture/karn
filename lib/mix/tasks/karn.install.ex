@@ -3,7 +3,7 @@ defmodule Mix.Tasks.Karn.Install.Docs do
 
   @spec short_doc() :: String.t()
   def short_doc do
-    "Quickly install your dev chatbot"
+    "#TODO Quickly install your dev chatbot"
   end
 
   @spec example() :: String.t()
