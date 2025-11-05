@@ -50,19 +50,22 @@ defmodule Karn.Server do
         %State{context: ctx, usage: usg, model: model} = state
       ) do
     req = Context.user(cmd)
+    
+    ctx_with_req = Context.append(ctx, req)
 
-    {usage, ctx} =
-      case LLMAdapter.generate_text(model, Context.to_list(Context.append(ctx, req))) do
+      case LLMAdapter.generate_text(model, Context.to_list(ctx_with_req)) do
         {:error, resp} ->
           handle_error(resp)
-          {usg, ctx}
+          {:reply,:done,state}
 
         {:ok, resp} ->
-          update_context(req, resp, state)
+          usage = Map.merge(resp.usage, usg[model], fn _k, l, r -> l + r end)
+          text = Response.text(resp)
+          final_ctx = Context.append(ctx_with_req, Context.assistant(text))
+          Output.send_response(text)
+          updated_usage = Map.put(usg, model, usage)
+          {:reply, :done, %State{state | context: final_ctx, usage: updated_usage}}
       end
-
-    usage = Map.put(usg, model, usage)
-    {:reply, :done, %State{model: model, context: ctx, usage: usage}}
   end
 
   @impl GenServer
@@ -227,12 +230,4 @@ defmodule Karn.Server do
     end
   end
 
-  defp update_context(req, resp, state) when is_struct(state, State) do
-    usage = Map.merge(resp.usage, state.usage[state.model], fn _k, l, r -> l + r end)
-    text = Response.text(resp)
-    ctx = Context.append(state.context, req)
-    ctx = Context.append(ctx, Context.assistant(text))
-    Output.send_response(text)
-    {usage, ctx}
-  end
 end
