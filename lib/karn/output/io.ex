@@ -106,6 +106,7 @@ defmodule Karn.Output.IO do
     IO.puts("╰" <> String.duplicate("─", box_width) <> "╯")
   end
 
+  # credo:disable-for-next-line
   defp wrap(text, max_len) do
     if String.length(text) <= max_len do
       [text]
@@ -114,27 +115,32 @@ defmodule Karn.Output.IO do
 
       {lines, last_line} =
         Enum.reduce(words, {[], ""}, fn word, {acc, line} ->
-          if line == "" do
-            {acc, word}
-          else
-            if String.length(line <> " " <> word) > max_len do
+          cond do
+            # 1. Start a new line (line is empty)
+            line == "" ->
+              {acc, word}
+
+            # 2. Check if the word is too long for the current line
+            String.length(line <> " " <> word) > max_len ->
+              # Finish the current line and start a new one with the word
               {[line | acc], word}
-            else
+
+            # 3. Append the word to the current line
+            true ->
               {acc, line <> " " <> word}
-            end
           end
         end)
 
-      lines = Enum.reverse([last_line | lines])
-
       # handle words longer than max_len
-      Enum.flat_map(lines, fn line ->
-        if String.length(line) > max_len do
+      [last_line | lines]
+      |> Enum.reverse()
+      |> Enum.flat_map(fn line ->
+        if String.length(line) < max_len do
+          [line]
+        else
           String.graphemes(line)
           |> Enum.chunk_every(max_len)
           |> Enum.map(&Enum.join/1)
-        else
-          [line]
         end
       end)
     end

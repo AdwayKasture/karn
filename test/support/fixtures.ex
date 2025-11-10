@@ -2,6 +2,8 @@ defmodule Karn.Test.Fixtures do
   alias ReqLLM.{Response, Message, Context}
   alias ReqLLM.Message.ContentPart
 
+  @moduledoc false
+
   def mock_llm_response(text, usage \\ %{}) do
     mock_message = %Message{
       role: :assistant,

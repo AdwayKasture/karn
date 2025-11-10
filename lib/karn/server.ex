@@ -1,4 +1,5 @@
 defmodule Karn.Server do
+  alias Karn.Usage
   alias Karn.LLMAdapter
   alias Karn.AI.{Introspect, Prompts, Models}
   alias Karn.State
@@ -14,18 +15,7 @@ defmodule Karn.Server do
     init = %State{
       context: new(),
       model: model,
-      usage: %{
-        model => %{
-          input_tokens: 0,
-          output_tokens: 0,
-          cached_tokens: 0,
-          reasoning_tokens: 0,
-          total_tokens: 0,
-          total_cost: 0.0,
-          input_cost: 0.0,
-          output_cost: 0.0
-        }
-      }
+      usage: %{model => Usage.new()}
     }
 
     GenServer.start_link(__MODULE__, init, opts)
@@ -50,29 +40,26 @@ defmodule Karn.Server do
         %State{context: ctx, usage: usg, model: model} = state
       ) do
     req = Context.user(cmd)
-    
     ctx_with_req = Context.append(ctx, req)
 
-      case LLMAdapter.generate_text(model, Context.to_list(ctx_with_req)) do
-        {:error, resp} ->
-          handle_error(resp)
-          {:reply,:done,state}
+    case LLMAdapter.generate_text(model, Context.to_list(ctx_with_req)) do
+      {:error, resp} ->
+        handle_error(resp)
+        {:reply, :done, state}
 
-        {:ok, resp} ->
-          usage = Map.merge(resp.usage, usg[model], fn _k, l, r -> l + r end)
-          text = Response.text(resp)
-          final_ctx = Context.append(ctx_with_req, Context.assistant(text))
-          Output.send_response(text)
-          updated_usage = Map.put(usg, model, usage)
-          {:reply, :done, %State{state | context: final_ctx, usage: updated_usage}}
-      end
+      {:ok, resp} ->
+        usage = Usage.update(usg[model], resp.usage)
+        final_ctx = handle_response(resp, ctx_with_req)
+        updated_usage = Map.put(usg, model, usage)
+        {:reply, :done, %State{state | context: final_ctx, usage: updated_usage}}
+    end
   end
 
   @impl GenServer
   def handle_call(
-        {:explain, mod, refs, q},
+        {:explain, mod, refs, query},
         _from,
-        state = %State{usage: usg, model: model}
+        %State{usage: usg, model: model} = state
       ) do
     all_modules = [mod | refs]
 
@@ -98,10 +85,15 @@ defmodule Karn.Server do
         |> Enum.map(fn {module, _} -> module end)
         |> List.delete(mod)
 
-      query_msg = Context.user(Prompts.explain_module(q, mod, valid_refs))
+      query_msg =
+        query
+        |> Prompts.explain_module(mod, valid_refs)
+        |> Context.user()
 
-      temp_ctx = upsert_messages(state.context, file_messages)
-      temp_ctx = Context.append(temp_ctx, query_msg)
+      temp_ctx =
+        state.context
+        |> upsert_messages(file_messages)
+        |> Context.append(query_msg)
 
       case LLMAdapter.generate_text(model, Context.to_list(temp_ctx)) do
         {:error, resp} ->
@@ -109,10 +101,8 @@ defmodule Karn.Server do
           {:reply, :done, state}
 
         {:ok, resp} ->
-          usage = Map.merge(resp.usage, usg[model], fn _k, l, r -> l + r end)
-          text = Response.text(resp)
-          final_ctx = Context.append(temp_ctx, Context.assistant(text))
-          Output.send_response(text)
+          usage = Usage.update(usg[model], resp.usage)
+          final_ctx = handle_response(resp, temp_ctx)
           updated_usage = Map.put(usg, model, usage)
           {:reply, :done, %State{state | context: final_ctx, usage: updated_usage}}
       end
@@ -138,7 +128,7 @@ defmodule Karn.Server do
   end
 
   @impl GenServer
-  def handle_call(:view_context, _from, state = %State{context: ctx}) do
+  def handle_call(:view_context, _from, %State{context: ctx} = state) do
     messages =
       Context.to_list(ctx)
       |> Enum.map(fn m ->
@@ -168,16 +158,7 @@ defmodule Karn.Server do
   @impl GenServer
   def handle_call({:switch_model, model}, _from, state) do
     new_usage =
-      Map.put_new(state.usage, model, %{
-        input_tokens: 0,
-        output_tokens: 0,
-        cached_tokens: 0,
-        reasoning_tokens: 0,
-        total_tokens: 0,
-        total_cost: 0.0,
-        input_cost: 0.0,
-        output_cost: 0.0
-      })
+      Map.put_new(state.usage, model, Usage.new())
 
     new_state =
       state
@@ -192,25 +173,28 @@ defmodule Karn.Server do
 
     final_messages =
       Enum.reduce(messages_to_upsert, existing_messages, fn new_msg, acc_messages ->
-        ref_to_find = new_msg.metadata[:ref]
+        # Use Map.get for safety
+        ref_to_find = Map.get(new_msg.metadata, :ref)
 
-        index =
-          if ref_to_find do
-            Enum.find_index(acc_messages, fn msg ->
-              msg.metadata && msg.metadata[:ref] == ref_to_find
-            end)
-          else
-            nil
-          end
-
-        if index do
+        # Use 'with' to bind the index if the ref exists and the index is found.
+        with index when is_integer(index) <- find_message_index(acc_messages, ref_to_find) do
+          # Success path: Index found (UPDATE)
           List.replace_at(acc_messages, index, new_msg)
         else
-          acc_messages ++ [new_msg]
+          # Failure path: Index is nil, or ref_to_find was nil (INSERT)
+          _ -> acc_messages ++ [new_msg]
         end
       end)
 
     Context.new(final_messages)
+  end
+
+  defp find_message_index(_messages, ref_to_find) when is_nil(ref_to_find), do: nil
+
+  defp find_message_index(messages, ref_to_find) do
+    Enum.find_index(messages, fn msg ->
+      Map.get(msg, :metadata) && Map.get(msg.metadata, :ref) == ref_to_find
+    end)
   end
 
   defp new() do
@@ -230,4 +214,9 @@ defmodule Karn.Server do
     end
   end
 
+  defp handle_response(resp, ctx) do
+    text = Response.text(resp)
+    Output.send_response(text)
+    Context.append(ctx, Context.assistant(text))
+  end
 end
