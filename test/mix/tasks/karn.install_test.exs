@@ -28,7 +28,7 @@ defmodule Mix.Tasks.Karn.InstallTest do
     |> assert_has_patch(
       "config/dev.exs",
       """
-      |config :karn, Karn, default_model: "google:gemini-2.0-flash", output: Karn.Output.IO
+      |config :karn, default_model: "google:gemini-2.0-flash"
       |
       """
     )
@@ -42,7 +42,7 @@ defmodule Mix.Tasks.Karn.InstallTest do
       |> assert_has_patch(
         "config/dev.exs",
         """
-        |config :karn, Karn, default_model: "#{model}", output: Karn.Output.IO
+        |config :karn, default_model: "#{model}"
         |
         """
       )
@@ -56,7 +56,7 @@ defmodule Mix.Tasks.Karn.InstallTest do
     |> assert_has_patch(
       "config/dev.exs",
       """
-      |config :karn, Karn, default_model: "anthropic:claude-3-5-haiku-20241022", output: Karn.Output.IO
+      |config :karn, default_model: "anthropic:claude-3-5-haiku-20241022"
       |
       """
     )

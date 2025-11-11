@@ -77,7 +77,6 @@ if Code.ensure_loaded?(Igniter) do
 
     @impl Igniter.Mix.Task
     def igniter(igniter) do
-      app_name = Igniter.Project.Application.app_name(igniter)
       opts = igniter.args.options
 
       {model, url} =
@@ -98,10 +97,7 @@ if Code.ensure_loaded?(Igniter) do
 
       # Do your work here and return an updated igniter
       igniter
-      |> Igniter.Project.Config.configure_new("dev.exs", app_name, [Karn],
-        default_model: model,
-        output: Karn.Output.IO
-      )
+      |> Igniter.Project.Config.configure("dev.exs", :karn, :default_model, model)
       |> Igniter.add_notice("""
       Installation done !!!
       configure your enviornment as mentioned on
