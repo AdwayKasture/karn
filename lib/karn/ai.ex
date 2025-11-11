@@ -62,31 +62,31 @@ defmodule Karn.AI do
   end
 
   @doc """
-  Sends a natural language query (`cmd`) to the AI server.
+  Sends a natural language query (`query`) to the AI server.
 
   This is the primary function for asking the AI questions or giving it instructions.
-  You can ask follow up questions on previous queries and explainations.
+  You can ask follow up questions on previous queries and explanations.
 
   ## Parameters
-  * `cmd`: The string command or query to send to the AI.
+  * `query`: The string query to send to the AI.
 
   ## Returns
   The response from the AI server (content and format depend on the server implementation).
-  Current (and default implementation) is IO as this is ment to be used through IEX
+  The default implementation is IO as this is ment to be used through IEX
   * `:done`
   """
 
-  def q(cmd) do
-    GenServer.call(@server, {:query, cmd})
+  def q(query) do
+    GenServer.call(@server, {:query, query})
   end
 
   @doc """
   Requests AI to explain any specific module.
 
   ## Parameters
-  * `mod`: The module to explain
-  * `refs (optional)`: The list of modules which are related to `mod` defaults to `[]`
-  * `q (optional)`: The specific question you have about the module/ functions, else a breif explaination is given
+  * `module`: The module to explain
+  * `references (optional)`: The list of modules which are related to `module` defaults to `[]`
+  * `query (optional)`: The specific question you have about the module/ functions, else a breif explaination is given
   The user can ask follow up questions using `q/1`
   NOTE: Currently the modules are not cached (on client or server)
   NOTE: Feeding too many modules might bloat the context, you can reduce context by firing `reset_context`
@@ -97,18 +97,18 @@ defmodule Karn.AI do
   * `:done`
   """
 
-  def e(mod), do: e(mod, [], nil)
+  def e(module), do: e(module, [], nil)
 
-  def e(mod, q) when is_bitstring(q), do: e(mod, [], q)
+  def e(module, query) when is_bitstring(query), do: e(module, [], query)
 
-  def e(mod, refs) when is_list(refs), do: e(mod, refs, nil)
+  def e(module, references) when is_list(references), do: e(module, references, nil)
 
-  def e(mod, ref) when is_atom(ref), do: e(mod, [ref], nil)
+  def e(module, reference) when is_atom(reference), do: e(module, [reference], nil)
 
-  def e(mod, ref, q) when is_atom(ref), do: e(mod, [ref], q)
+  def e(module, reference, query) when is_atom(reference), do: e(module, [reference], query)
 
-  def e(mod, refs, q) do
-    GenServer.call(@server, {:explain, mod, refs, q})
+  def e(module, references, query) do
+    GenServer.call(@server, {:explain, module, references, query})
   end
 
   @doc """
@@ -166,14 +166,14 @@ defmodule Karn.AI do
   Reset context
 
   ## Parameters
-  * `sys`: Optional system prompt, if non is resorts to default
+  * `sys_prompt`: Optional system prompt, if non is resorts to default
 
   ## Returns
   The response from the AI server (content and format depend on the server implementation).
   Current (and default implementation) is IO as this is ment to be used through IEX
   * `:done`
   """
-  def reset_context(sys \\ nil) do
-    GenServer.call(@server, {:reset_context, sys})
+  def reset_context(sys_prompt \\ nil) do
+    GenServer.call(@server, {:reset_context, sys_prompt})
   end
 end

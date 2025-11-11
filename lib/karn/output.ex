@@ -1,6 +1,6 @@
 defmodule Karn.Output do
   @moduledoc """
-  Defines the contract for receiveing messages from the LLM .
+  Defines the contract for receiving messages from the LLM .
   By default uses the IO implementation 
   """
   @callback send_response(message :: String.t()) :: :ok

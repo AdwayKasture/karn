@@ -30,10 +30,9 @@ Karn version 0.1.0 is out, but there is still some cleanup pending before "stabl
 Add `karn` as a dependency to your `mix.exs` file. It is recommended to add it only for the `:dev` environment.
 User can change the default model by adding to their dev config 
 ``` elixir
-    config :karn,
-       default_model: "anthropic:claude-3-5-haiku-20241022",
-       output: Karn.Output.IO
-
+  config :karn,
+    default_model: "anthropic:claude-3-5-haiku-20241022",
+    output: Karn.Output.IO
 ```
 
 ```elixir
@@ -46,11 +45,13 @@ end
 
 One can also install Karn using igniter 
 ```shell
-    # use google model 
-    mix igniter.install karn --google
+# uses gemini as default model
+mix igniter.install karn
+
+mix igniter.install karn --anthropic
 ```
 
-Supported options are `--google`,`--anthropic`,`--openai`
+Supported options are `--google`, `--anthropic`, `--openai`
 
 Then, fetch the dependencies:
 
@@ -67,11 +68,11 @@ Karn is designed to be used interactively within an `IEx` session.
 Start your project's `IEx` session:
 
 ```shell
-    # phoenix application
-    iex -S mix phx.server
+# phoenix application
+iex -S mix phx.server
 
-    # generic
-    iex -S mix run
+# generic
+iex -S mix run
 ```
 
 ### 2. Configure API Key
