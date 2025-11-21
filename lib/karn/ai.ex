@@ -75,7 +75,7 @@ defmodule Karn.AI do
   """
 
   def q(query) do
-    GenServer.call(@server, {:query, query}, 30000)
+    GenServer.call(@server, {:query, query}, 30_000)
   end
 
   @doc """
@@ -106,7 +106,7 @@ defmodule Karn.AI do
   def e(module, reference, query) when is_atom(reference), do: e(module, [reference], query)
 
   def e(module, references, query) do
-    GenServer.call(@server, {:explain, module, references, query}, 30000)
+    GenServer.call(@server, {:explain, module, references, query}, 30_000)
   end
 
   @doc """

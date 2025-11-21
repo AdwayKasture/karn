@@ -2,21 +2,6 @@
 
 Karn is an interactive AI assistant for your Elixir codebase, designed to be used within an `IEx` session. It helps you understand and query your code using natural language, leveraging the power of Large Language Models.
 
-
-Karn version 0.1.0 is out, but there is still some cleanup pending before "stable"
-## Roadmap for stable release
-
-- [x] docs
-- [ ] cleanup
-- [x] default models for common providers
-- [x] upgrade to stable version of reqllm
-- [x] integration tests
-- [ ] validate multimodel support
-- [x] update message on start for config of reqLLM on start
-- [x] missing api key better handling 
-- [x] e to pass referece modules in prompt to give more context to the LLM
-
-
 ## Features
 
 *   **Natural Language Queries**: Ask questions about your code in plain English.
@@ -31,8 +16,7 @@ Add `karn` as a dependency to your `mix.exs` file. It is recommended to add it o
 User can change the default model by adding to their dev config 
 ``` elixir
   config :karn,
-    default_model: "anthropic:claude-3-5-haiku-20241022",
-    output: Karn.Output.IO
+    default_model: "anthropic:claude-3-5-haiku-20241022"
 ```
 
 ```elixir
@@ -52,6 +36,7 @@ mix igniter.install karn --anthropic
 ```
 
 Supported options are `--google`, `--anthropic`, `--openai`
+You can use any model supported by `ReqLLM`, the supported options are just to get started fast
 
 Then, fetch the dependencies:
 
@@ -95,7 +80,7 @@ You can configure your key in one of two ways:
 
 ### 3. Start the Karn Server
 
-Start the `Karn.Ai.Server` process:
+Start the server:
 
 ```elixir
 Karn.start
@@ -118,6 +103,14 @@ Ask any question about Elixir or your project.
 
 ```elixir
 iex> q "What is the difference between a GenServer and an Agent?"
+╭─ assistant ─────────────────────────────────────────────────────────────────╮
+│ Okay, Let's clarify the difference between GenServer and Agent in Elixir.   │
+│                                                                             │
+│ **Agent:**                                                                  │
+│                                                                             │
+│ *   **Simple State Management:** An Agent is...                             │
+│                                                                             │
+╰─────────────────────────────────────────────────────────────────────────────╯
 ```
 
 #### Explain Module (`e/3`)
@@ -126,7 +119,16 @@ Get an explanation for a specific module. You can also provide related modules f
 
 ```elixir
 # Get a general explanation of MyModule
-iex> e MyModule
+iex> e Karn
+╭─ assistant ──────────────────────────────────────────────────────────╮
+│ Okay, I've analyzed the `Elixir.Karn` module. Here's a breakdown:    │
+│                                                                      │
+│ **Purpose:**                                                         │
+│                                                                      │
+│ The `Karn` module acts as a client...                                │
+│ explanation, context management, and usage tracking.                 │
+│                                                                      │
+╰──────────────────────────────────────────────────────────────────────╯
 
 # Get a specific explanation of MyModule
 iex> e MyModule,"How does function b work?"
