@@ -3,6 +3,8 @@ defmodule Karn.ServerModelsTest do
   import Mox
   alias Karn.AI.Models
   alias Karn.Server
+  alias Karn.LLMAdapterMock
+  import Karn.Test.Fixtures
 
   setup :set_mox_from_context
   setup :verify_on_exit!
@@ -26,6 +28,15 @@ defmodule Karn.ServerModelsTest do
       Karn.view_state()
       assert_receive {:state, state}
       assert state.model == new_model
+
+      llm_response = mock_llm_response("Test response")
+
+      expect(LLMAdapterMock, :generate_text, 1, fn ^new_model, _context_list ->
+        {:ok, llm_response}
+      end)
+
+      assert Karn.q("Test query") == :done
+      assert_receive {:response, "Test response"}
     end
 
     test ":switch_model with invalid model sends error and keeps state", %{pid: _pid} do
@@ -39,6 +50,15 @@ defmodule Karn.ServerModelsTest do
       Karn.view_state()
       assert_receive {:state, state}
       assert state.model == initial_model
+
+      llm_response = mock_llm_response("Test response")
+
+      expect(LLMAdapterMock, :generate_text, 1, fn ^initial_model, _context_list ->
+        {:ok, llm_response}
+      end)
+
+      assert Karn.q("Test query") == :done
+      assert_receive {:response, "Test response"}
     end
 
     test ":reset_model switches back to the default model", %{pid: _pid} do
@@ -54,6 +74,16 @@ defmodule Karn.ServerModelsTest do
       Karn.view_state()
       assert_receive {:state, new_state}
       assert new_state.model == Models.default()
+
+      default_model = Models.default()
+      llm_response = mock_llm_response("Test response")
+
+      expect(LLMAdapterMock, :generate_text, 1, fn ^default_model, _context_list ->
+        {:ok, llm_response}
+      end)
+
+      assert Karn.q("Test query") == :done
+      assert_receive {:response, "Test response"}
     end
   end
 end

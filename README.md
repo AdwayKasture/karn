@@ -10,7 +10,7 @@ Karn version 0.1.0 is out, but there is still some cleanup pending before "stabl
 - [ ] cleanup
 - [x] default models for common providers
 - [x] upgrade to stable version of reqllm
-- [ ] integration tests
+- [x] integration tests
 - [ ] validate multimodel support
 - [x] update message on start for config of reqLLM on start
 - [x] missing api key better handling 
@@ -135,10 +135,10 @@ iex> e MyModule,"How does function b work?"
 iex> e MyModule,ModuleB,"How are the two modules related"
 
 # multiple references
-iex> e MyModule,[ModuleB],"How are the two modules related"
+iex> e MyModule,[ModuleB,ModuleC],"Why is MyModule.function behaving this way ?"
 
 #Ask a specific question about MyModule, providing another module for context
-iex> e MyModule, MyOtherModule, "How does the main function work?"
+iex> e MyModule, "Write me ecto query to fetch records for xyz schema ?"
 ```
 
 #### View Conversation Context (`view_context/0`)
