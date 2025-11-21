@@ -1,6 +1,7 @@
 defmodule Mix.Tasks.Karn.InstallTest do
   use ExUnit.Case, async: true
   import Igniter.Test
+  @moduletag :igniter
 
   @model_switches [
     {"--google", "google:gemini-2.0-flash"},

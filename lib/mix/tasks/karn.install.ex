@@ -3,12 +3,12 @@ defmodule Mix.Tasks.Karn.Install.Docs do
 
   @spec short_doc() :: String.t()
   def short_doc do
-    "#TODO Quickly install your dev chatbot"
+    "Igniter task to install Karn with your desired default model"
   end
 
   @spec example() :: String.t()
   def example do
-    "mix karn.install --google"
+    "mix karn.install --anthropic"
   end
 
   @spec long_doc() :: String.t()
@@ -95,7 +95,6 @@ if Code.ensure_loaded?(Igniter) do
             {"google:gemini-2.0-flash", "https://hexdocs.pm/req_llm/ReqLLM.Providers.Google.html"}
         end
 
-      # Do your work here and return an updated igniter
       igniter
       |> Igniter.Project.Config.configure("dev.exs", :karn, :default_model, model)
       |> Igniter.add_notice("""

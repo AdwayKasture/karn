@@ -2,6 +2,10 @@ defmodule Karn.AI do
   @server Karn.Server
   alias Karn.AI.Models
 
+  @moduledoc """
+  Implementation for `Karn`
+  """
+
   def start() do
     start([])
   end
